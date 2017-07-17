@@ -30,9 +30,9 @@
 #include <assert.h>
 
 #ifndef BUILTINDEFAULTCOMPONENTLIB
-#define DEFAULTCOMPONENTLIB "../componentLibraries/defaultLibrary/" TO_STR(DLL_PREFIX) "defaultComponentLibrary" TO_STR(DEBUG_EXT) TO_STR(DLL_EXT)
+#define DEFAULTCOMPONENTLIB "../componentLibraries/defaultLibrary/" TO_STR(SHAREDLIB_PREFIX) "defaultComponentLibrary" TO_STR(DEBUG_EXT) TO_STR(SHAREDLIB_SUFFIX)
 #endif
-#define LIBEXT TO_STR(DLL_EXT)
+#define LIBEXT TO_STR(SHAREDLIB_SUFFIX)
 
 using namespace hopsan;
 

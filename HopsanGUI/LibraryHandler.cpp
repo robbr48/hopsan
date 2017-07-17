@@ -259,7 +259,7 @@ void LibraryHandler::loadLibrary(QString loadPath, LibraryTypeEnumT type, Hidden
     // Fall back, load dll/so/dynlibs
     else
     {
-        gpMessageHandler->addWarningMessage("Did not find any libary xml files, falling back to " TO_STR(DLL_EXT) " loading for: "+loadPath);
+        gpMessageHandler->addWarningMessage("Did not find any libary xml files, falling back to " TO_STR(SHAREDLIB_SUFFIX) " loading for: "+loadPath);
         libraryLoadPathRootDir.setFilter(QDir::Files | QDir::Dirs | QDir::NoDot | QDir::NoDotDot);
         libraryLoadPathRootDir.setNameFilters(QStringList() << "*"+QString(LIBEXT));
         QDirIterator itd(libraryLoadPathRootDir, QDirIterator::Subdirectories);
@@ -393,7 +393,7 @@ bool LibraryHandler::loadLibrary(SharedComponentLibraryPtrT pLibrary, LibraryTyp
     }
     else if (!pLibrary->libFilePath.isEmpty())
     {
-        gpMessageHandler->addWarningMessage("Fallback loading " TO_STR(DLL_EXT));
+        gpMessageHandler->addWarningMessage("Fallback loading " TO_STR(SHAREDLIB_SUFFIX));
         isDllLib=true;
         libraryMainFileInfo.setFile(pLibrary->libFilePath);
     }

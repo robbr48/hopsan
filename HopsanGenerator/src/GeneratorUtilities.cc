@@ -352,7 +352,7 @@ bool compileComponentLibrary(QString path, HopsanGenerator *pGenerator, QString 
 bool compile(QString wdPath, QString gccPath, QString o, QString srcFiles, QString inclPaths, QString cflags, QString lflags, QString &output)
 {
     // Append dll extension for this platform
-    o = o+TO_STR(DLL_EXT);
+    o = o+TO_STR(SHAREDLIB_SUFFIX);
 
     // Create compilation script file
     QFile compileScript;

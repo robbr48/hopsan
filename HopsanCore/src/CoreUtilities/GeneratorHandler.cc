@@ -38,7 +38,7 @@ using namespace hopsan;
 GeneratorHandler::GeneratorHandler()
 {
     mLoadedSuccessfully = false;
-    HString generatorLibName = TO_STR(DLL_PREFIX) "HopsanGenerator" TO_STR(DEBUG_EXT) TO_STR(DLL_EXT);
+    HString generatorLibName = TO_STR(SHAREDLIB_PREFIX) "HopsanGenerator" TO_STR(DEBUG_EXT) TO_STR(SHAREDLIB_SUFFIX);
 
 #ifdef _WIN32
     mpLib = LoadLibrary(generatorLibName.c_str()); //Load the dll
