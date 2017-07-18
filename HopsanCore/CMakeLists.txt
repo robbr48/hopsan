@@ -13,6 +13,9 @@ file(GLOB_RECURSE csvparser_srcfiles dependencies/IndexingCSVParser/IndexingCSVP
 add_library(HopsanCore SHARED ${HopsanCore_srcfiles}
 			      ${numhop_srcfiles}
 			      ${csvparser_srcfiles})
+
+target_compile_definitions(HopsanCore PRIVATE WRITEHOPSANCORELOG)
+
 target_include_directories(HopsanCore PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
   $<INSTALL_INTERFACE:include>)
