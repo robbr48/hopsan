@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Hopsan: Hopsan Users Manual</title>
+<title>Hopsan: Multi-Threaded Simulations</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -47,25 +47,30 @@
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){initNavTree('index.html','');});
+$(document).ready(function(){initNavTree('userMultiThreadedPage.html','');});
 </script>
 <div id="doc-content">
 <div class="header">
   <div class="headertitle">
-<div class="title">Hopsan Users Manual </div>  </div>
+<div class="title">Multi-Threaded Simulations </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><ol type="1">
-<li><a class="el" href="page_usinghopsangui.html">Using The Hopsan GUI Application</a></li>
-<li><a class="el" href="page_usinghopsancli.html">Using The Hopsan CLI Application</a></li>
-<li><a class="el" href="page_componentdevelopment.html">Component Library Development</a> </li>
-</ol>
+<div class="textblock"><h1><a class="anchor" id="multi-threaded-simulations"></a>
+Multi-threaded simulations</h1>
+<p>Hopsan NG uses multi-threaded simulations to take advantage of so called multi-core architecture in modern processors. This is activated from the Options dialog. It is also possible to select how many threads that are to be used. By choosing zero threads, the simulation engine will automatically ask the operating system how many cores (or "hyperthreads") the computer has, and use this amount of threads. Using more threads than available processors will lock up the program. There is, however a built-in limitation to prevent this, so it should never happen.</p>
+<p>Though the intention of parallelizing is to reduce simulation time, there is no guarantee that a parallel simulation will be faster. There are always overhead costs involved, and for small model they can be larger than the actual benefits. The overhead cost can also increase when using a higher number of cores, which means that on some systems a small model may run faster with two cores, but slower with four.</p>
+<p>In order to maximize the benefits, it is advised to select processor affinity in Windows Task Manager to specify exactly which cores that shall be used (unless all cores are to be used of course). It is recommended to disable the simulation progress bar before simulations using all cores, since it will slow down one of the simulation threads.</p>
+<h1><a class="anchor" id="multithreaded-references"></a>
+References:</h1>
+<p> 
+<a href = "http://urn.kb.se/resolve?urn=urn:nbn:se:liu:diva-68373">Braun R, Nordin P, Eriksson B, Krus P. High Performance System Simulation Using Multiple Processor Cores. In: The Twelfth Scandinavian International Conference on Fluid Power, SICFP'11. 2011.</a>
+ </p>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon Sep 16 2019 10:42:39 for Hopsan by
+    <li class="footer">Generated on Mon Sep 16 2019 10:42:36 for Hopsan by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.13 </li>
   </ul>

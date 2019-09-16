@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Hopsan: Hopsan Users Manual</title>
+<title>Hopsan: Markdown help with LaTeX equation support</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -47,25 +47,54 @@
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){initNavTree('index.html','');});
+$(document).ready(function(){initNavTree('devWritingCppComponentsPageMarkdownHelp.html','');});
 </script>
 <div id="doc-content">
 <div class="header">
   <div class="headertitle">
-<div class="title">Hopsan Users Manual </div>  </div>
+<div class="title">Markdown help with LaTeX equation support </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><ol type="1">
-<li><a class="el" href="page_usinghopsangui.html">Using The Hopsan GUI Application</a></li>
-<li><a class="el" href="page_usinghopsancli.html">Using The Hopsan CLI Application</a></li>
-<li><a class="el" href="page_componentdevelopment.html">Component Library Development</a> </li>
-</ol>
-</div></div><!-- contents -->
+<div class="textblock"><p>New from version 0.7 is the ability to write component help documentation in markdown with additional support for LaTeX equations. As of 0.7 release there is only one component using the feature, the HydraulicLaminarOrifice, and it is demonstrated here as an example. When you write new components or update old ones, please consider using this feature. For help on typical markdown syntax see the Internet!<br />
+ <b>MyExampleOrifice.md:</b> </p><pre class="fragment">### Description
+![Laminar orifice picture](orifice_user.svg)
+
+Hydraulic orifice modeling laminar flow.
+
+#### Input Variables
+* **Kc** - Pressure-Flow Coefficient [m^5/Ns]
+
+#### Port Initial Conditions
+No initial conditions can be set for Q-type blocks.
+
+&lt;!--- ### Tips---&gt;
+
+### Theory
+The laminar flow through the orifice is proportional to the pressure difference according to
+&lt;!---EQUATION q_{2} = K_{c} \left(p_{1}-p_{2}\right) ---&gt;
+
+#### Hopsan TLM adaption
+In Q components the positive flow direction is outwards from each port, in this case the TLM equations are
+&lt;!---EQUATION p_{1} = c_{1} + q_{1} Z_{c1} ---&gt;
+&lt;!---EQUATION p_{2} = c_{2} + q_{2} Z_{c2} ---&gt;
+&lt;!---EQUATION q_{1} = -q_{2} ---&gt;
+The flow equation can now be rewritten in the following steps
+&lt;!---EQUATION q_{2} = K_{c} \left( c_{1} - q_{2} Z_{c1} - c_{2} + q_{2} Z_{c2} \right) ---&gt;
+&lt;!---EQUATION q_{2} = K_{c} \left( c_{1} - c_{2} \right) - K_{c} q_{2} \left( Z_{c1} + Z_{c2} \right) ---&gt;
+&lt;!---EQUATION q_{2} \left( 1 + K_{c} q_{2} \left( Z_{c1} + Z_{c2} \right)  \right) = K_{c} \left(  c_{1} - c_{2} \right) ---&gt;
+
+Which finally becomes the implemented equation
+
+&lt;!---EQUATION q2 = \frac{K_{c}\left(c_{1}-c_{2}\right)}{1.0+K_{c}\left(Zc_{1}+Zc_{2}\right)} ---&gt;
+
+#### References
+
+</pre> </div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon Sep 16 2019 10:42:39 for Hopsan by
+    <li class="footer">Generated on Mon Sep 16 2019 10:42:36 for Hopsan by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.13 </li>
   </ul>

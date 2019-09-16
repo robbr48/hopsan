@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Hopsan: Hopsan Users Manual</title>
+<title>Hopsan: Particle Swarm Algorithm</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -47,25 +47,38 @@
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){initNavTree('index.html','');});
+$(document).ready(function(){initNavTree('particle-swarm-algorithm.html','');});
 </script>
 <div id="doc-content">
 <div class="header">
   <div class="headertitle">
-<div class="title">Hopsan Users Manual </div>  </div>
+<div class="title">Particle Swarm Algorithm </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><ol type="1">
-<li><a class="el" href="page_usinghopsangui.html">Using The Hopsan GUI Application</a></li>
-<li><a class="el" href="page_usinghopsancli.html">Using The Hopsan CLI Application</a></li>
-<li><a class="el" href="page_componentdevelopment.html">Component Library Development</a> </li>
+<div class="textblock"><p>The particle swarm algorithm was first presented by (Eberhard and Kennedy, 1995). It is inspired by the social behaviour in a flock of individuals. It is generally slower than the complex algorithm, but may offer a higher chance for convergence. The method works as follows:</p>
+<ol type="1">
+<li>Generate a population of random particle in the parameter space.</li>
+<li>Initialize the best known point for each particle to its own position: <img class="formulaInl" alt="$p_{i}=x_{i}$" src="form_6.png"/></li>
+<li>Initialize the velocity of the particle to a random value</li>
+<li>Simulate each particle and evaluate objective functions</li>
+<li>Update each particle's velocity, by using a weight factor <img class="formulaInl" alt="$(\omega)$" src="form_7.png"/>, two "gravities", one towards the particle's own best point <img class="formulaInl" alt="$(\phi_{p})$" src="form_8.png"/> and one towards the global best known points <img class="formulaInl" alt="$(\phi_{g})$" src="form_9.png"/>, with randomization factors <img class="formulaInl" alt="$(r_{p},r_{g})$" src="form_10.png"/>: <img class="formulaInl" alt="$v_{i} = \omega v_{i}+\phi_{p}r_{p}(p_{i}-x_{i})+\phi_{g}r_{g}(g-x_{i})$" src="form_11.png"/></li>
 </ol>
+<ol type="1">
+<li>Update each particle's best known point if the new position is better: <img class="formulaInl" alt="$if(f(x_{i})&gt;f(p_{i})): p_{i}=x_{i}$" src="form_12.png"/></li>
+</ol>
+<ol type="1">
+<li>Update the swarms best known point if one of the new points is better: <img class="formulaInl" alt="$if(f(p_{i})&gt;f(g)): g=p_{i}$" src="form_13.png"/></li>
+<li>Repeat from point 4 until convergence</li>
+</ol>
+<h1><a class="anchor" id="References"></a>
+References</h1>
+<p>Eberhart, R. C. and Kennedy, J. A new optimizer using particle swarm theory. Proceedings of the Sixth International Symposium on Micromachine and Human Science, Nagoya, Japan. pp. 39-43, 1995. </p>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon Sep 16 2019 10:42:39 for Hopsan by
+    <li class="footer">Generated on Mon Sep 16 2019 10:42:36 for Hopsan by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.13 </li>
   </ul>

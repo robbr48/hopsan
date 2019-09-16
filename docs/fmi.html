@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Hopsan: Hopsan Users Manual</title>
+<title>Hopsan: Functional Mock-up Interface</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -47,25 +47,41 @@
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){initNavTree('index.html','');});
+$(document).ready(function(){initNavTree('fmi.html','');});
 </script>
 <div id="doc-content">
 <div class="header">
   <div class="headertitle">
-<div class="title">Hopsan Users Manual </div>  </div>
+<div class="title">Functional Mock-up Interface </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><ol type="1">
-<li><a class="el" href="page_usinghopsangui.html">Using The Hopsan GUI Application</a></li>
-<li><a class="el" href="page_usinghopsancli.html">Using The Hopsan CLI Application</a></li>
-<li><a class="el" href="page_componentdevelopment.html">Component Library Development</a> </li>
-</ol>
+<div class="textblock"><p>The Functional Mock-up Interface is an open interface for communication between simulation environments. It is developed by the MODELISAR project, and is currently supported by more than 30 simulation tools. The concept is to exchange Functional Mock-up Units (FMUs) between different programs. An FMU is a zip-file with the file ending ".fmu", containing an XML description file and a binary file (DLL in Windows or SO in Linux) with a plain C interface which the host program can link against. It can also contain graphics, documentation and source code files.</p>
+<h1><a class="anchor" id="export-fmu"></a>
+Exporting a Functional Mock-up Unit</h1>
+<p>Hopsan models can be exported to FMUs by clicking on the Export to FMU button. Then choose an empty folder. All required files will be exported, compiled and compressed. Model inputs and outputs can be specified by using interface components.</p>
+<p> <table style="border-spacing: 20px 10px" border="0"> 
+  <tr><td><img src="../graphics/export_fmu_icon.png" border=0></td><td><b> Export to FMU</b></td></tr> 
+  </table>   <h2><a class="anchor" id="export-fmu-prerequisites"></a>
+Prerequisites</h2>
+<ul>
+<li>MinGW compiler (available in system path)</li>
+</ul>
+<h1><a class="anchor" id="import-fmu"></a>
+Importing a Functional Mock-up Unit</h1>
+<p>FMUs from other programs (or from Hopsan itself) can be imported by clicking on the import from FMU icon. If all goes well they will appear as components in the component library.</p>
+<p> <table style="border-spacing: 20px 10px" border="0"> 
+  <tr><td><img src="../graphics/import_fmu_icon.png" border=0></td><td><b> Import from FMU</b></td></tr> 
+  </table>   <h2><a class="anchor" id="export-fmu-prerequisites"></a>
+Prerequisites</h2>
+<ul>
+<li>MinGW compiler (available in system path) </li>
+</ul>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon Sep 16 2019 10:42:39 for Hopsan by
+    <li class="footer">Generated on Mon Sep 16 2019 10:42:36 for Hopsan by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.13 </li>
   </ul>

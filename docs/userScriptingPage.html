@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Hopsan: Hopsan Users Manual</title>
+<title>Hopsan: Scripting</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -47,25 +47,30 @@
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){initNavTree('index.html','');});
+$(document).ready(function(){initNavTree('userScriptingPage.html','');});
 </script>
 <div id="doc-content">
 <div class="header">
   <div class="headertitle">
-<div class="title">Hopsan Users Manual </div>  </div>
+<div class="title">Scripting </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><ol type="1">
-<li><a class="el" href="page_usinghopsangui.html">Using The Hopsan GUI Application</a></li>
-<li><a class="el" href="page_usinghopsancli.html">Using The Hopsan CLI Application</a></li>
-<li><a class="el" href="page_componentdevelopment.html">Component Library Development</a> </li>
-</ol>
+<div class="textblock"><h2>HCOM</h2>
+<p>Most functions in Hopsan can be accessed through the command interpreter in the terminal widget. The command language is called HCOM and is loosely based upon the commands used in the previous version of Hopsan (the one from 2001). Apart from the commands and functions, there is a built-in calculator that can evaluate mathematical expressions using the SymHop library.</p>
+<p>See <a class="el" href="userScriptingPageHcomPage.html">HCOM Scripting</a> for details.</p>
+<h2>Python</h2>
+<p>A Python interpreter is also included to run Python scripts. The idea is that these scripts also should be able to access some functions in the Hopsan GUI and that they will allow the user to run any python commands and external python based tools or custom code. <br />
+<b>Note!</b> Currently the python support is not working very well, it is not even included in some builds of Hopsan.</p>
+<p>See <a class="el" href="userScriptingPagePythonPage.html">Python Scripting</a> for details.</p>
+<h2>NumHop</h2>
+<p>In Hopsan version 0.7 and later there is also a new script language called NumHop that is embedded inside the Simulation model. This script language allows you to evaluate simple numerical expressions and to read and write parametrs (default start values) in your model. The numhop script is interpreted and evaluated by the Hopsan Core prior to initialization. This means that you can use it to initialize start values in your model based on equations. This can be very usefull in some cases. NumHop expressions can also be entered as parameter values in the Component Properties dialog.</p>
+<p>See <a class="el" href="userScriptingPageNumHopPage.html">NumHop Scripting</a> for details. </p>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon Sep 16 2019 10:42:39 for Hopsan by
+    <li class="footer">Generated on Mon Sep 16 2019 10:42:36 for Hopsan by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.13 </li>
   </ul>

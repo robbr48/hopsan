@@ -1,0 +1,27 @@
+\form#0:$\alpha$
+\form#1:$\beta$
+\form#2:$\gamma$
+\form#3:$(x_{w})$
+\form#4:$(x_{c})$
+\form#5:$x_{new}=x_{c}+\alpha(x_{c}-x_{w})+r$
+\form#6:$p_{i}=x_{i}$
+\form#7:$(\omega)$
+\form#8:$(\phi_{p})$
+\form#9:$(\phi_{g})$
+\form#10:$(r_{p},r_{g})$
+\form#11:$v_{i} = \omega v_{i}+\phi_{p}r_{p}(p_{i}-x_{i})+\phi_{g}r_{g}(g-x_{i})$
+\form#12:$if(f(x_{i})>f(p_{i})): p_{i}=x_{i}$
+\form#13:$if(f(p_{i})>f(g)): g=p_{i}$
+\form#14:$J*b = x$
+\form#15:$L*U*b = x$
+\form#16:$U*b = y$
+\form#17:$L*y = x$
+\form#18:\[G=\frac{a_1 s + a_0}{b_1 s + b_0}\]
+\form#19:$num[0]=a_0$
+\form#20:$num[1]=a_1$
+\form#21:$den[0]=b_0$
+\form#22:$den[1]=b_1$
+\form#23:\[ y = \int_{0}^{t} \left\{ \begin{array}{ll} 0 & \mbox{if } \int u \, dt + y_0 < y_{min} \\ 0 & \mbox{if } \int u \, dt + y_0 > y_{max} \\ u & \mbox{otherwise} \end{array} \right. \, dt + y_0\]
+\form#24:\[G=\frac{a_2 s^2 + a_1 s + a_0}{b_2 s^2 + b_1 s + b_0}\]
+\form#25:$num[2]=a_2$
+\form#26:$den[2]=b_2$
