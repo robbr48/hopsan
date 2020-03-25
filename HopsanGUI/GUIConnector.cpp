@@ -48,6 +48,8 @@
 #include "loadFunctions.h"
 #include "Configuration.h"
 #include "LibraryHandler.h"
+#include "ModelHandler.h"
+#include "OMSimulatorHandler.h"
 
 class UndoStack;
 
@@ -468,6 +470,11 @@ QPointF Connector::getStartPoint()
 QPointF Connector::getEndPoint()
 {
     return mPoints.last();
+}
+
+QVector<QPointF> Connector::getPoints() const
+{
+    return mPoints;
 }
 
 //! @brief Returns the name of the start port of a connector
@@ -1263,6 +1270,16 @@ void Connector::setPointsAndGeometries(const QVector<QPointF> &rPoints, const QS
 
     // Make sure the start point and end point of the connector is the center position of the end port
     updateStartEndPositions();
+
+    if(gpOMSimulatorHandler->isConnected() && gpModelHandler->getCurrentModel()->isOMSimulatorModel()) {
+        QString ref1 = getStartComponentName()+"."+getStartPortName();
+        ref1.prepend(mpStartPort->getParentModelObject()->getSystemNameHieararchy().join(".")+".");
+        ref1.prepend(gpModelHandler->getCurrentTopLevelSystem()->getName()+".");
+        QString ref2 = getEndComponentName()+"."+getEndPortName();
+        ref2.prepend(mpEndPort->getParentModelObject()->getSystemNameHieararchy().join(".")+".");
+        ref2.prepend(gpModelHandler->getCurrentTopLevelSystem()->getName()+".");
+        gpOMSimulatorHandler->setConnectionGeometry(ref1, ref2, mPoints);
+    }
 }
 
 //! @brief Helpfunction to add line segment to connector

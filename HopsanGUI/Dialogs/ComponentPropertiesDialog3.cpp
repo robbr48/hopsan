@@ -1316,6 +1316,9 @@ void VariableTableWidget::createTableRow(const int row, const CoreVariameterDesc
     }
 
     // Set the name field
+    name.replace("_dot_",".");
+    name.replace("_openingbracket_","[");
+    name.replace("_closingbracket_","]");
     pItem = new QTableWidgetItem(name);
     pItem->setToolTip(fullName);
     pItem->setTextAlignment(Qt::AlignCenter);

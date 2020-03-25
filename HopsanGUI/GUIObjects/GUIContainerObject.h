@@ -52,6 +52,7 @@ class Widget;
 class TextBoxWidget;
 class QTableView;
 class QRadioButton;
+enum class OMSimulatorType;
 
 //Forward Declaration
 class ModelWidget;
@@ -173,6 +174,8 @@ public:
     ModelObject *addModelObject(ModelObjectAppearance* pAppearanceData, QPointF position, double rotation=0, SelectionStatusEnumT startSelected = Deselected, NameVisibilityEnumT nameStatus = UseDefault, UndoStatusEnumT undoSettings = Undo);
     void deleteModelObject(const QString &rObjectName, UndoStatusEnumT undoSettings=Undo);
     void renameModelObject(QString oldName, QString newName, UndoStatusEnumT undoSettings=Undo);
+
+    ModelObject *addOMSimulatorComponent(QString name, OMSimulatorType type, QPointF pos, QFileInfo fmuFileInfo);
 
     void replaceComponent(QString name, QString newType);
 
@@ -329,7 +332,7 @@ public slots:
     void showSubcomponentPorts(bool doShowThem);
 
     //Connector slots
-    Connector* createConnector(Port *pPort, UndoStatusEnumT undoSettings=Undo);
+    Connector* createConnector(Port *pPort, UndoStatusEnumT undoSettings=Undo, bool doNotAddToOMSimulator=false);
     Connector* createConnector(Port *pPort1, Port *pPort2, UndoStatusEnumT undoSettings=Undo);
 
     //Copy/paste slots

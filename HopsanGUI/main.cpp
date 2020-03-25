@@ -58,12 +58,14 @@
 #include "CoreAccess.h"
 #include "BuiltinTests.h"
 #include "LibraryHandler.h"
+#include "OMSimulatorHandler.h"
 
 // Declare global pointers
 Configuration *gpConfig = nullptr;
 DesktopHandler *gpDesktopHandler = nullptr;
 CopyStack *gpCopyStack = nullptr;
 GUIMessageHandler *gpMessageHandler = nullptr;
+OMSimulatorHandler *gpOMSimulatorHandler = nullptr;
 
 MainWindow* gpMainWindow = nullptr;
 QWidget *gpMainWindowWidget = nullptr;
@@ -106,12 +108,33 @@ int main(int argc, char *argv[])
     gpCopyStack = &gCopyStack;
     GUIMessageHandler gMessageHandler;
     gpMessageHandler = &gMessageHandler;
+    OMSimulatorHandler gOMSimulatorHandler;
+    gpOMSimulatorHandler = &gOMSimulatorHandler;
 
     // Create the mainwindow
     MainWindow mainwindow;
     gpMainWindow = &mainwindow;
     gpMainWindowWidget = static_cast<QWidget*>(&mainwindow);
     mainwindow.createContents();
+
+    //////////////////////////////
+    // Test OMSimulator support //
+    //////////////////////////////
+
+    QString version;
+    gpOMSimulatorHandler->getVersion(version);
+    gpMessageHandler->addInfoMessage("Trying version: "+version);
+    gpOMSimulatorHandler->connect("/home/robbr48/git/OMSimulator/install/linux/lib/libOMSimulator.so");
+    gpOMSimulatorHandler->setLogFile("/home/robbr48/slask/omslog.txt");
+    gpOMSimulatorHandler->getVersion(version);
+    gpMessageHandler->addInfoMessage("Trying version: "+version);
+    gpOMSimulatorHandler->newModel("test");
+    gpOMSimulatorHandler->addSystem("test.system",OMSimulatorType::TLM);
+    QString contents;
+    gpOMSimulatorHandler->list("test", contents);
+    gpMessageHandler->addInfoMessage(contents);
+
+    //////////////////////////////
 
     // Read command line arguments
     //! @todo maybe use TCLAP here

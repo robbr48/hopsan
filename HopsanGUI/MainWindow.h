@@ -217,6 +217,10 @@ public:
     QAction *mpMeasureSimulationTimeAction;
     QAction *mpToggleHideAllDockAreasAction;
 
+    QAction *mpNewOMSimulatorModelAction;
+    QAction *mpExportOMSimulatorModelAction;
+    QAction *mpImportOMSimulatorModelAction;
+
     QAction *mpDebug1Action;
     QAction *mpDebug2Action;
 
@@ -322,6 +326,7 @@ private:
     QToolBar *mpToolsToolBar;
     QToolBar *mpSimToolBar;
     QToolBar *mpViewToolBar;
+    QToolBar *mpOMSimulatorToolBar;
     QLabel *mpTimeLabelDeliminator1;
     QLabel *mpTimeLabelDeliminator2;
 

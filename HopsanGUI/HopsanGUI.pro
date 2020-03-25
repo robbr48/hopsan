@@ -136,6 +136,8 @@ QMAKE_CXXFLAGS *= -U__STRICT_ANSI__ -Wno-c++0x-compat
 # Platform specific additional project options
 # -------------------------------------------------
 unix {
+    LIBS += -ldl
+
     # This will add runtime .so search paths to the executable, by using $ORIGIN these paths will be relative the executable (regardless of working dir, VERY useful)
     # The QMAKE_LFLAGS_RPATH and QMAKE_RPATHDIR does not seem to be able to handle the $$ORIGIN stuff, adding manually to LFLAGS
     !macx:QMAKE_LFLAGS *= -Wl,-rpath,\'\$$ORIGIN/./\'
@@ -268,7 +270,8 @@ SOURCES += main.cpp \
     Utilities/WebviewWrapper.cpp \
     GeneratorUtils.cpp \
     Dialogs/OptimizationScriptWizard.cpp \
-    Widgets/TextEditorWidget.cpp
+    Widgets/TextEditorWidget.cpp \
+    OMSimulatorHandler.cpp
 
 HEADERS += MainWindow.h \
     BuiltinTests.h \
@@ -359,7 +362,8 @@ HEADERS += MainWindow.h \
     GeneratorUtils.h \
     Dialogs/OptimizationScriptWizard.h \
     Widgets/TextEditorWidget.h \
-    HcomTest.hpp
+    HcomTest.hpp \
+    OMSimulatorHandler.h
 
 OTHER_FILES += \
     ../hopsan-default-configuration.xml

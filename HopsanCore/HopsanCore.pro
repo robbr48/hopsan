@@ -36,7 +36,8 @@ INCLUDEPATH *= $${PWD}/dependencies/libnumhop/include
 SOURCES += $${PWD}/dependencies/libnumhop/src/Expression.cpp
 SOURCES += $${PWD}/dependencies/libnumhop/src/Helpfunctions.cpp
 SOURCES += $${PWD}/dependencies/libnumhop/src/VariableStorage.cpp
-HEADERS += $${PWD}/dependencies/libnumhop/include/numhop.h
+HEADERS += $${PWD}/dependencies/libnumhop/include/numhop.h \
+    include/Components/OMSimulatorComponents.hpp
 #--------------------------------------------------------
 
 #-------------------------------------------------

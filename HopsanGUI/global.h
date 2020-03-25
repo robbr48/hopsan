@@ -61,6 +61,7 @@ class OptionsDialog;
 class QGridLayout;
 class FindWidget;
 class PlotWidget2;
+class OMSimulatorHandler;
 
 // Global pointer to the main window and QWidget cast version
 extern MainWindow* gpMainWindow;
@@ -71,6 +72,7 @@ extern Configuration *gpConfig;
 extern DesktopHandler *gpDesktopHandler;
 extern CopyStack *gpCopyStack;
 extern GUIMessageHandler *gpMessageHandler;
+extern OMSimulatorHandler *gpOMSimulatorHandler;
 
 // Global object pointers that are children to main window
 extern PlotHandler *gpPlotHandler;

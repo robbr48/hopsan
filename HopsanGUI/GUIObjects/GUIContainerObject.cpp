@@ -81,6 +81,7 @@
 #include "PlotHandler.h"
 #include "Utilities/HelpPopUpWidget.h"
 #include "GeneratorUtils.h"
+#include "OMSimulatorHandler.h"
 
 //! @brief Constructor for container objects.
 //! @param position Initial position where container object is to be placed in its parent container
@@ -650,7 +651,7 @@ ModelObject* SystemObject::addModelObject(ModelObjectAppearance *pAppearanceData
 
     ModelObject* pNewModelObject = nullptr;
     QString componentTypeName = pAppearanceData->getTypeName();
-    if (componentTypeName == HOPSANGUISYSTEMTYPENAME || componentTypeName == HOPSANGUICONDITIONALSYSTEMTYPENAME)
+    if (componentTypeName == HOPSANGUISYSTEMTYPENAME || componentTypeName == HOPSANGUICONDITIONALSYSTEMTYPENAME || componentTypeName == HOPSANGUIOMSIMULATORSYSTEMTLMTYPE || componentTypeName == HOPSANGUIOMSIMULATORSYSTEMWEAKLYCOUPLEDTYPE || componentTypeName == HOPSANGUIOMSIMULATORSYSTEMSTRONGLYCOUPLEDTYPE)
     {
         pNewModelObject = new SystemObject(position, rotation, pAppearanceData, startSelected, mGfxType, this);
     }
@@ -770,7 +771,9 @@ void SystemObject::deleteModelObject(const QString &rObjectName, UndoStatusEnumT
     ModelObjectMapT::iterator it = mModelObjectMap.find(rObjectName);
     if (it != mModelObjectMap.end())
     {
+
         ModelObject* pModelObject = it.value();
+
 
         // Remove connectors that are connected to the model object
         QList<Connector *> connectorPtrList = pModelObject->getConnectorPtrs();
@@ -813,6 +816,15 @@ void SystemObject::deleteModelObject(const QString &rObjectName, UndoStatusEnumT
         mpScene->removeItem(pModelObject);
         pModelObject->deleteInHopsanCore();
         pModelObject->deleteLater();
+        if(gpOMSimulatorHandler->isConnected() && mpModelWidget->isOMSimulatorModel()) {
+            QString ident = mpModelWidget->getTopLevelSystemContainer()->getName();
+            ident.append("."+pModelObject->getSystemNameHieararchy().join("."));
+            if(pModelObject->getTypeName() == "OMSimulatorFMU") {
+                ident.append("."+rObjectName);
+            }
+            gpOMSimulatorHandler->deleteSubModelOrSystem(ident);
+            qDebug() << "Deleting submodel: " << ident;
+        }
     }
     else
     {
@@ -868,6 +880,152 @@ void SystemObject::renameModelObject(QString oldName, QString newName, UndoStatu
         }
     }
     emit checkMessages();
+}
+
+ModelObject *ContainerObject::addOMSimulatorComponent(QString name, OMSimulatorType type, QPointF pos, QFileInfo fmuFileInfo)
+{
+    QString typeName;
+    switch (type) {
+        case OMSimulatorType::TLM:
+            typeName = HOPSANGUIOMSIMULATORSYSTEMTLMTYPE;
+            break;
+        case OMSimulatorType::WeaklyCoupled:
+            typeName = HOPSANGUIOMSIMULATORSYSTEMWEAKLYCOUPLEDTYPE;
+            break;
+        case OMSimulatorType::StronglyCoupled:
+            typeName = HOPSANGUIOMSIMULATORSYSTEMSTRONGLYCOUPLEDTYPE;
+            break;
+        case OMSimulatorType::FMU:
+            typeName = HOPSANGUIOMSIMULATORFMUTYPE;
+            break;
+        case OMSimulatorType::InputConnector:
+            typeName = HOPSANGUIOMSIMULATORINPUTCONNECTORTYPE;
+            break;
+        case OMSimulatorType::OutputConnector:
+            typeName = HOPSANGUIOMSIMULATOROUTPUTCONNECTORTYPE;
+            break;
+        case OMSimulatorType::ExternalModel:
+            qDebug() << "Adding external models are not yet implemented.";
+            return nullptr;
+        default:
+            return nullptr; //Should never happen
+    }
+
+    QString identifier = this->getSystemNameHieararchy().join(".");
+    identifier.prepend(gpModelHandler->getCurrentTopLevelSystem()->getName()+".");
+    identifier.append("."+name);
+
+    SharedModelObjectAppearanceT appearance = gpLibraryHandler->getModelObjectAppearancePtr(typeName);
+    appearance->setDisplayName(name);
+
+    ModelObject *pObj = this->addModelObject(appearance.data(),pos);
+
+
+    //Add ports and parameters for FMUs
+    if(typeName == HOPSANGUIOMSIMULATORFMUTYPE) {
+        QStringList inputPortNames, outputPortNames, actualParameterNames;
+        QString parameterNames;
+        QStringList portNames;
+        gpOMSimulatorHandler->getPortNames(identifier, portNames);
+        for(const QString &portName : portNames) {
+            QString portIdentifier = identifier+"."+portName;
+            QString correctedName = portName;
+            correctedName.replace(".","_dot_");
+            correctedName.replace("[","_openingbracket_");
+            correctedName.replace("]","_closingbracket_");
+            OMSimulatorCausality causality;
+            gpOMSimulatorHandler->getPortCausality(portIdentifier, causality);
+            if(causality == OMSimulatorCausality::Input) {
+                inputPortNames.append(correctedName);
+            }
+            else if(causality == OMSimulatorCausality::Output) {
+                outputPortNames.append(correctedName);
+            }
+            else if(causality == OMSimulatorCausality::Parameter) {
+                actualParameterNames.append(portName);
+                parameterNames.append(correctedName+",");
+            }
+        }
+        parameterNames.chop(1);
+
+        //Set port names parameter
+        QStringList allPortNames = inputPortNames+outputPortNames;
+        pObj->setParameterValue("ports", allPortNames.join(","));
+
+        //Set port causaulities parameter
+        QString portCausalities;
+        for(auto &name : inputPortNames) {
+            Q_UNUSED(name);
+            portCausalities.append("input,");
+        }
+        for(auto &name : outputPortNames) {
+            Q_UNUSED(name);
+            portCausalities.append("output,");
+        }
+        portCausalities.chop(1);
+        pObj->setParameterValue("causalities", portCausalities);
+
+        for(const QString &portName : allPortNames) {
+            SharedPortAppearanceT portAppearance(new PortAppearance());
+            QString portType;
+            double x,y,rot;
+            if(inputPortNames.contains(portName)) {
+                x=0;
+                y = (inputPortNames.indexOf(portName)+1.0)/(inputPortNames.size()+1.0);
+                rot = 180;
+                portType = "ReadPortType";
+            }
+            else {
+                x=1;
+                y = (outputPortNames.indexOf(portName)+1.0)/(outputPortNames.size()+1.0);
+                rot = 0;
+                portType = "WritePortType";
+            }
+            portAppearance->x = x;
+            portAppearance->y = y;
+            portAppearance->rot = rot;
+            pObj->getAppearanceData()->addPortAppearance(portName, portAppearance);
+            pObj->createRefreshExternalPort(portName);
+        }
+
+        pObj->setParameterValue("parameters", parameterNames);
+        QString parameterDefaults;
+        for(const QString &parameterName : actualParameterNames) {
+            QString parameterIdentifier = identifier+"."+parameterName;
+            OMSimulatorDataType dataType;
+            gpOMSimulatorHandler->getPortDataType(parameterIdentifier, dataType);
+            if(dataType == OMSimulatorDataType::Real) {
+                bool ok;
+                double value = gpOMSimulatorHandler->getReal(parameterIdentifier, ok);
+                if(ok) {
+                    qDebug() << "Found default value: " << ok;
+                    parameterDefaults.append(QString::number(value)+",");
+                }
+            }
+            parameterDefaults.chop(1);
+            pObj->setParameterValue("defaults", parameterDefaults);
+        }
+
+        pObj->refreshAppearance();
+    }
+    else if(typeName == HOPSANGUIOMSIMULATORINPUTCONNECTORTYPE) {
+        SharedPortAppearanceT portAppearance(new PortAppearance());
+        portAppearance->x = 0.5;
+        portAppearance->y = 0.5;
+        portAppearance->rot = 0;
+        pObj->getAppearanceData()->addPortAppearance("in", portAppearance);
+        pObj->createRefreshExternalPort("in");
+    }
+    else if(typeName == HOPSANGUIOMSIMULATOROUTPUTCONNECTORTYPE) {
+        SharedPortAppearanceT portAppearance(new PortAppearance());
+        portAppearance->x = 0.5;
+        portAppearance->y = 0.5;
+        portAppearance->rot = 0;
+        pObj->getAppearanceData()->addPortAppearance("out", portAppearance);
+        pObj->createRefreshExternalPort("out");
+    }
+
+    return pObj;
 }
 
 
@@ -1237,6 +1395,22 @@ void SystemObject::removeSubConnector(Connector* pConnector, UndoStatusEnumT und
             Port *pStartP = pConnector->getStartPort();
             Port *pEndP = pConnector->getEndPort();
 
+            // OMSimulator disconnect
+            if(mpModelWidget->isOMSimulatorModel()) {
+                QString ident1 = pConnector->getStartPortName();
+                ident1.prepend(pConnector->getStartComponentName()+".");
+                ident1.prepend(pConnector->getStartPort()->getParentModelObject()->getSystemNameHieararchy().join(".")+".");
+                ident1.prepend(mpModelWidget->getTopLevelSystemContainer()->getName()+".");
+
+                QString ident2 = pConnector->getEndPortName();
+                ident2.prepend(pConnector->getEndComponentName()+".");
+                ident2.prepend(pConnector->getEndPort()->getParentModelObject()->getSystemNameHieararchy().join(".")+".");
+                ident2.prepend(mpModelWidget->getTopLevelSystemContainer()->getName()+".");
+
+                gpOMSimulatorHandler->deleteConnection(ident1, ident2);
+                qDebug() << "Deleting connector from " << ident1 << " to " << ident2;
+            }
+
             // Volunector disconnect
             if ( pConnector->isVolunector() )
             {
@@ -1308,7 +1482,7 @@ void SystemObject::removeSubConnector(Connector* pConnector, UndoStatusEnumT und
 //! @param pPort is a pointer to the clicked port, either start or end depending on the mIsCreatingConnector flag.
 //! @param undoSettings is true if the added connector shall not be registered in the undo stack, for example if this function is called by a redo function.
 //! @return A pointer to the created connector, 0 if failed, or connector unfinished
-Connector* SystemObject::createConnector(Port *pPort, UndoStatusEnumT undoSettings)
+Connector* SystemObject::createConnector(Port *pPort, UndoStatusEnumT undoSettings, bool doNotAddToOMSimulator)
 {
     // When clicking end port (finish creation of connector)
     if (mIsCreatingConnector)
@@ -1340,10 +1514,31 @@ Connector* SystemObject::createConnector(Port *pPort, UndoStatusEnumT undoSettin
             else
 #endif
             {
-                success = this->getCoreSystemAccessPtr()->connect(pStartPort->getParentModelObjectName(),
-                                                                  pStartPort->getName(),
-                                                                  pEndPort->getParentModelObjectName(),
-                                                                  pEndPort->getName());
+                bool okToCreate = true;
+                if(mpModelWidget->isOMSimulatorModel() && !doNotAddToOMSimulator) {
+                    qDebug() << "Adding OMSimulator connector\n";
+                    QString ident1 = pStartPort->getParentModelObject()->getSystemNameHieararchy().join(".");
+                    ident1.prepend(gpModelHandler->getCurrentTopLevelSystem()->getName()+".");
+                    ident1.append("."+pStartPort->getParentModelObjectName());
+                    ident1.append("."+pStartPort->getName());
+
+                    QString ident2 = pEndPort->getParentModelObject()->getSystemNameHieararchy().join(".");
+                    ident2.prepend(gpModelHandler->getCurrentTopLevelSystem()->getName()+".");
+                    ident2.append("."+pEndPort->getParentModelObjectName());
+                    ident2.append("."+pEndPort->getName());
+
+                    qDebug() << "Connecting " << ident1 << " with " << ident2;
+
+                    if(!gpOMSimulatorHandler->addConnection(ident1, ident2)) {
+                        okToCreate = false;
+                    }
+                }
+                if(okToCreate) {
+                    success = this->getCoreSystemAccessPtr()->connect(pStartPort->getParentModelObjectName(),
+                                                                      pStartPort->getName(),
+                                                                      pEndPort->getParentModelObjectName(),
+                                                                      pEndPort->getName());
+                }
             }
         }
 
@@ -1368,7 +1563,22 @@ Connector* SystemObject::createConnector(Port *pPort, UndoStatusEnumT undoSettin
             mpModelWidget->hasChanged();
 
             mIsCreatingConnector = false;
+
+            if(gpOMSimulatorHandler->isConnected()) {
+                QString ident1 = mpTempConnector->getStartPort()->getParentModelObject()->getSystemNameHieararchy().join(".");
+                ident1.prepend(gpModelHandler->getCurrentTopLevelSystem()->getName()+".");
+                ident1.append("."+mpTempConnector->getStartComponentName());
+                ident1.append("."+mpTempConnector->getStartPortName());
+
+                QString ident2 = mpTempConnector->getEndPort()->getParentModelObject()->getSystemNameHieararchy().join(".");
+                ident2.prepend(gpModelHandler->getCurrentTopLevelSystem()->getName()+".");
+                ident2.append("."+mpTempConnector->getEndComponentName());
+                ident2.append("."+mpTempConnector->getEndPortName());
+
+                gpOMSimulatorHandler->setConnectionGeometry(ident1, ident2, mpTempConnector->getPoints());
+            }
         }
+
 
         emit checkMessages();
 
@@ -1413,7 +1623,7 @@ Connector* SystemObject::createConnector(Port *pPort1, Port *pPort2, UndoStatusE
     if (!mIsCreatingConnector)
     {
         createConnector(pPort1, undoSettings);
-        Connector* pConn = createConnector(pPort2, undoSettings);
+        Connector* pConn = createConnector(pPort2, undoSettings, true);
 
         // If we failed we still want to finish and add this connector (if success it was already added)
         if (!pConn->isConnected())

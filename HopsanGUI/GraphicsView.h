@@ -43,6 +43,9 @@
 
 //Forward Declarations
 class SystemObject;
+
+enum class OMSimulatorType;
+
 class ModelWidget;
 
 class GraphicsView : public QGraphicsView
@@ -109,6 +112,7 @@ private slots:
     void insertComponentFromLineEdit();
 
 private:
+    void insertOMSimulatorComponent(OMSimulatorType type, QPoint pos);
     QColor mIsoColor;
     bool mCtrlKeyPressed;
     bool mShiftKeyPressed;

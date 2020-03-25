@@ -42,6 +42,7 @@
 #include <QRect>
 #include <QLineEdit>
 #include <QStringListModel>
+#include <QInputDialog>
 
 #include "global.h"
 #include "common.h"
@@ -56,6 +57,8 @@
 #include "MessageHandler.h"
 #include "GUIObjects/GUIContainerObject.h"
 #include "LibraryHandler.h"
+#include "OMSimulatorHandler.h"
+#include "Widgets/ProjectTabWidget.h"
 
 //Maybe we can remove these to when some cleanup has happened in the code later on (maybe even GUIPort.h)
 #include "GUIPort.h"
@@ -122,10 +125,45 @@ void GraphicsView::contextMenuEvent ( QContextMenuEvent * event )
         }
         else
         {
+            QAction *addTLMSystemAction;
+            QAction *addWeaklyCoupledSystemAction;
+            QAction *addStronglyCoupledSystemAction;
+            QAction *addFMUAction;
+            QAction *addInputConnectorAction;
+            QAction *addOutputConnectorAction;
+            QAction *addExternalModelAction;
+            QAction *addTextBoxAction;
+
             QGraphicsView::contextMenuEvent(event);
             QMenu menu(this);
-            QAction *addTextBoxAction = menu.addAction("Add Text Box Widget");
-            addTextBoxAction->setDisabled(mpParentModelWidget->isEditingLimited() || mpContainerObject->isLocallyLocked());
+
+            if(mpContainerObject->isTopLevelContainer() && mpParentModelWidget->isOMSimulatorModel()) {
+                addTLMSystemAction = menu.addAction(tr("Add TLM System"));
+                addWeaklyCoupledSystemAction = menu.addAction(tr("Add Weakly Coupled System"));
+                addStronglyCoupledSystemAction = menu.addAction(tr("Add Strongly Coupled System"));
+                if(!mpContainerObject->getModelObjects().isEmpty()) {
+                    addTLMSystemAction->setDisabled(true);
+                    addWeaklyCoupledSystemAction->setDisabled(true);
+                    addStronglyCoupledSystemAction->setDisabled(true);
+                }
+            }
+            if(mpContainerObject->getTypeName() == HOPSANGUIOMSIMULATORSYSTEMTLMTYPE) {
+                addWeaklyCoupledSystemAction = menu.addAction(tr("Add Weakly Coupled System"));
+                addExternalModelAction = menu.addAction(tr("Add External Model"));
+            }
+            else if(mpContainerObject->getTypeName() == HOPSANGUIOMSIMULATORSYSTEMWEAKLYCOUPLEDTYPE) {
+                addStronglyCoupledSystemAction = menu.addAction(tr("Add Strongly Coupled System"));
+                addFMUAction = menu.addAction(tr("Add Functional Mockup Unit (FMU)"));
+            }
+            else if(mpContainerObject->getTypeName() == HOPSANGUIOMSIMULATORSYSTEMSTRONGLYCOUPLEDTYPE) {
+                addFMUAction = menu.addAction(tr("Add Functional Mockup Unit (FMU)"));
+                addInputConnectorAction = menu.addAction(tr("Add Input Connector"));
+                addOutputConnectorAction = menu.addAction(tr("Add Output Connector"));
+            }
+            else {
+                addTextBoxAction = menu.addAction("Add Text Box Widget");
+                addTextBoxAction->setDisabled(mpParentModelWidget->isEditingLimited() || mpContainerObject->isLocallyLocked());
+            }
 
             QCursor cursor;
             QAction *selectedAction = menu.exec(cursor.pos());
@@ -134,6 +172,27 @@ void GraphicsView::contextMenuEvent ( QContextMenuEvent * event )
             {
                 mpContainerObject->getUndoStackPtr()->newPost();
                 mpContainerObject->addTextBoxWidget(this->mapToScene(event->pos()).toPoint());
+            }
+            else if(selectedAction == addTLMSystemAction) {
+                insertOMSimulatorComponent(OMSimulatorType::TLM, event->pos());
+            }
+            else if(selectedAction == addWeaklyCoupledSystemAction) {
+                insertOMSimulatorComponent(OMSimulatorType::WeaklyCoupled, event->pos());
+            }
+            else if(selectedAction == addStronglyCoupledSystemAction) {
+                insertOMSimulatorComponent(OMSimulatorType::StronglyCoupled, event->pos());
+            }
+            else if(selectedAction == addFMUAction) {
+                insertOMSimulatorComponent(OMSimulatorType::FMU, event->pos());
+            }
+            else if(selectedAction == addInputConnectorAction) {
+                insertOMSimulatorComponent(OMSimulatorType::InputConnector, event->pos());
+            }
+            else if(selectedAction == addOutputConnectorAction) {
+                insertOMSimulatorComponent(OMSimulatorType::OutputConnector, event->pos());
+            }
+            else if(selectedAction == addExternalModelAction) {
+                insertOMSimulatorComponent(OMSimulatorType::ExternalModel, event->pos());
             }
         }
     }
@@ -195,6 +254,100 @@ void GraphicsView::insertComponentFromLineEdit()
     hideAddComponentLineEdit();
 }
 
+void GraphicsView::insertOMSimulatorComponent(OMSimulatorType type, QPoint pos)
+{
+    QString dialogTitle;
+    switch (type) {
+        case OMSimulatorType::TLM:
+            dialogTitle = tr("Add TLM System");
+            break;
+        case OMSimulatorType::WeaklyCoupled:
+            dialogTitle = tr("Add Weakly Coupled System");
+            break;
+        case OMSimulatorType::StronglyCoupled:
+            dialogTitle = tr("Add Strongly Coupled System");
+            break;
+        case OMSimulatorType::FMU:
+            dialogTitle = tr("Add FMU");
+            break;
+        case OMSimulatorType::InputConnector:
+            dialogTitle = tr("Add Input Connector");
+            break;
+        case OMSimulatorType::OutputConnector:
+            dialogTitle = tr("Add Output Connector");
+            break;
+        case OMSimulatorType::ExternalModel:
+            qDebug() << "Adding external models are not yet implemented.";
+            return;
+        default:
+            return; //Should never happen
+    }
+
+    QString filePath;
+    QFileInfo fmuFileInfo;
+    if(type == OMSimulatorType::FMU) {
+        filePath = QFileDialog::getOpenFileName(gpMainWindowWidget,"Add FMU",gpConfig->getStringSetting(CFG_FMUIMPORTDIR),tr("Functional Mockup Unit (*.fmu)"));
+        if(filePath.isEmpty()) {
+            return; //Cancelled by user
+        }
+        fmuFileInfo = QFileInfo(filePath);
+        if(!fmuFileInfo.exists()) {
+            gpMessageHandler->addErrorMessage("File not found: "+filePath);
+            return;
+        }
+        gpConfig->setStringSetting(CFG_FMUIMPORTDIR, fmuFileInfo.absolutePath());
+    }
+
+    bool ok;
+    QString name = QInputDialog::getText(gpMainWindowWidget, dialogTitle, tr("Name:"), QLineEdit::Normal, "", &ok);
+    if(!ok) {
+        return; //Cancelled by user
+    }
+    if(name.isEmpty()) {
+        gpMessageHandler->addErrorMessage("Name of OMSimulator element must not be empty.");
+        return;
+    }
+
+    QString identifier = mpContainerObject->getSystemNameHieararchy().join(".");
+    identifier.prepend(mpParentModelWidget->getTopLevelSystemContainer()->getName()+".");
+    identifier.append("."+name);
+
+    if(type == OMSimulatorType::FMU) {
+        if(!gpOMSimulatorHandler->addSubModel(identifier, fmuFileInfo.absoluteFilePath())) {
+            gpMessageHandler->addErrorMessage("OMSimulator command failed: addFMU() cref: "+identifier);
+            return;
+        }
+    }
+    else if(type == OMSimulatorType::InputConnector) {
+        if(!gpOMSimulatorHandler->addConnector(identifier, OMSimulatorCausality::Input)) {
+            gpMessageHandler->addErrorMessage("OMSimulator comman failed: addConnector() cref: "+identifier);
+            return;
+        }
+    }
+    else if(type == OMSimulatorType::OutputConnector) {
+        if(!gpOMSimulatorHandler->addConnector(identifier, OMSimulatorCausality::Output)) {
+            gpMessageHandler->addErrorMessage("OMSimulator comman failed: addConnector() cref: "+identifier);
+            return;
+        }
+    }
+    else {
+        if(!gpOMSimulatorHandler->addSystem(identifier, type)) {
+            gpMessageHandler->addErrorMessage("OMSimulator command failed: addSystem() cref: "+identifier);
+            return;
+        }
+    }
+
+    ModelObject *pObj = mpContainerObject->addOMSimulatorComponent(name, type, this->mapToScene(pos), fmuFileInfo);
+
+    double x = pObj->getCenterPos().x();
+    double y = pObj->getCenterPos().y();
+    double h = pObj->boundingRect().height();
+    double w = pObj->boundingRect().width();
+    if(!gpOMSimulatorHandler->setElementGeometry(identifier, x, y, h, w)) {
+        gpMessageHandler->addWarningMessage("OMSimulator command failed: setElementGeometry() cref: "+identifier);
+    }
+}
+
 
 //! Defines what happens when moving an object in a GraphicsView.
 //! @param event contains information of the drag operation.
@@ -239,6 +392,31 @@ void GraphicsView::dropEvent(QDropEvent *event)
     {
         mpParentModelWidget->hasChanged();
         QString text = event->mimeData()->text();
+
+        if(mpContainerObject->getTypeName() == HOPSANGUIOMSIMULATORSYSTEMTLMTYPE) {
+            if(text == HOPSANGUIOMSIMULATORSYSTEMWEAKLYCOUPLEDTYPE) {
+                insertOMSimulatorComponent(OMSimulatorType::WeaklyCoupled, event->pos());
+            }
+            if(text == HOPSANGUIOMSIMULATOREXTERNALMODELTYPE) {
+                insertOMSimulatorComponent(OMSimulatorType::ExternalModel, event->pos());
+            }
+            return; //No other components allowed
+        }
+        if(mpContainerObject->getTypeName() == HOPSANGUIOMSIMULATORSYSTEMWEAKLYCOUPLEDTYPE) {
+            if(text == HOPSANGUIOMSIMULATORSYSTEMSTRONGLYCOUPLEDTYPE) {
+                insertOMSimulatorComponent(OMSimulatorType::StronglyCoupled, event->pos());
+            }
+            if(text == HOPSANGUIOMSIMULATORFMUTYPE) {
+                insertOMSimulatorComponent(OMSimulatorType::FMU, event->pos());
+            }
+            return; //No other components allowed
+        }
+        if(mpContainerObject->getTypeName() == HOPSANGUIOMSIMULATORSYSTEMTLMTYPE) {
+            if(text == HOPSANGUIOMSIMULATORFMUTYPE) {
+                insertOMSimulatorComponent(OMSimulatorType::FMU, event->pos());
+            }
+            return; //No other components allowed
+        }
 
         //Dropped item is a drag copy operation
         if(text == "HOPSANDRAGCOPY")

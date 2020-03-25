@@ -33,6 +33,7 @@
 
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QDialogButtonBox>
 
 
 //Hopsan includes
@@ -46,9 +47,11 @@
 #include "MessageHandler.h"
 #include "MainWindow.h"
 #include "ModelHandler.h"
+#include "OMSimulatorHandler.h"
 #include "SimulationThreadHandler.h"
 #include "version_gui.h"
 #include "Widgets/DebuggerWidget.h"
+#include "LibraryHandler.h"
 #include "MessageHandler.h"
 #include "Widgets/FindWidget.h"
 #include "Widgets/LibraryWidget.h"
@@ -58,6 +61,7 @@
 #include "Widgets/PlotWidget2.h"
 #include "Widgets/TextEditorWidget.h"
 #include "Utilities/GUIUtilities.h"
+#include "GUIConnector.h"
 
 #ifdef USEZMQ
 #include "RemoteSimulationUtils.h"
@@ -115,6 +119,243 @@ ModelWidget *ModelHandler::addNewModel(QString modelName, LoadOptions options)
     mNumberOfUntitledModels += 1;
 
     return pNewModelWidget;
+}
+
+
+void ModelHandler::addNewOMSimulatorModel()
+{
+    if(!gpOMSimulatorHandler->isConnected()) {
+        gpMessageHandler->addErrorMessage("OMSimulator is not connected.");
+        return;
+    }
+
+    QDialog *pD = new QDialog(gpMainWindowWidget);
+    QGridLayout *pL = new QGridLayout(pD);
+    QLabel *pModelNameLabel = new QLabel("Model name:",pD);
+    QLabel *pRootSystemNameLabel = new QLabel("Root system name:",pD);
+    QLabel *pRootSystemTypeLabel = new QLabel("Root system type:",pD);
+    pModelNameLabel->setAlignment(Qt::AlignRight);
+    pRootSystemNameLabel->setAlignment(Qt::AlignRight);
+    pRootSystemTypeLabel->setAlignment(Qt::AlignRight);
+    QLineEdit *pModelNameTextEdit = new QLineEdit(pD);
+    QLineEdit *pRootSystemNameTextEdit = new QLineEdit(pD);
+    QComboBox *pRootSystemTypeComboBox = new QComboBox(pD);
+    pRootSystemTypeComboBox->addItems(QStringList() << "TLM" << "Weakly Coupled" << "Strongly Coupled");
+    QDialogButtonBox *pNewOMSimulatorModelDialogButtonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, pD);
+    pL->addWidget(pModelNameLabel,                      0, 0);
+    pL->addWidget(pModelNameTextEdit,                   0, 1);
+    pL->addWidget(pRootSystemNameLabel,                 1, 0);
+    pL->addWidget(pRootSystemNameTextEdit,              1, 1);
+    pL->addWidget(pRootSystemTypeLabel,                 2, 0);
+    pL->addWidget(pRootSystemTypeComboBox,              2, 1);
+    pL->addWidget(pNewOMSimulatorModelDialogButtonBox,  3, 0, 1, 2);
+    connect(pNewOMSimulatorModelDialogButtonBox->button(QDialogButtonBox::Ok),      SIGNAL(clicked()),      pD, SLOT(accept()));
+    connect(pNewOMSimulatorModelDialogButtonBox->button(QDialogButtonBox::Cancel),      SIGNAL(clicked()),      pD, SLOT(reject()));
+    if(pD->exec() == QDialog::Rejected) {
+        return;
+    }
+
+    QString modelName = pModelNameTextEdit->text();
+    QString rootSystemName = pRootSystemNameTextEdit->text();
+    OMSimulatorType rootSystemType = (OMSimulatorType)(pRootSystemTypeComboBox->currentIndex()+1);
+
+    if(modelName.isEmpty() || rootSystemName.isEmpty()) {
+        gpMessageHandler->addErrorMessage("Model name or root system name must not be empty.");
+        return;
+    }
+
+    if(!gpOMSimulatorHandler->newModel(modelName)) {
+        gpMessageHandler->addErrorMessage("OMSimulator command failed: newModel()");
+        return;
+    }
+
+    if(!gpOMSimulatorHandler->setResultFile(modelName, "/home/robbr48/slask/oms.csv")) {
+        gpMessageHandler->addErrorMessage("OMSimulator command failed: setResultFile()");
+        return;
+    }
+
+    if(!gpOMSimulatorHandler->setLoggingInterval(modelName, 0.01)) {
+        gpMessageHandler->addErrorMessage("OMSimulator command failed: setLoggingInterval()");
+        return;
+    }
+
+    if(!gpOMSimulatorHandler->setStartTime(modelName, 0)) {
+        gpMessageHandler->addErrorMessage("OMSimulator command failed: setStartTime()");
+        return;
+    }
+
+    if(!gpOMSimulatorHandler->setStopTime(modelName, 10)) {
+        gpMessageHandler->addErrorMessage("OMSimulator command failed: setStopTime()");
+        return;
+    }
+
+
+    if(!gpOMSimulatorHandler->addSystem(modelName+"."+rootSystemName, rootSystemType)) {
+        gpMessageHandler->addErrorMessage("OMSimulator command failed: addSystem()");
+        return;
+    }
+
+    if(!gpOMSimulatorHandler->setFixedStepSize(modelName+"."+rootSystemName, 0.001)) {
+        gpMessageHandler->addErrorMessage("OMSimulator command failed: setFixedStepSize()");
+        return;
+    }
+
+    ////
+    ModelWidget *pNewModelWidget = new ModelWidget(this,gpCentralTabWidget);
+    pNewModelWidget->setIsOMSimulatorModel(true);
+    pNewModelWidget->getTopLevelSystemContainer()->setName(modelName);
+    addModelWidget(pNewModelWidget, modelName, NoLoadOptions);
+    pNewModelWidget->setSaved(true);
+    QString typeName;
+    if(rootSystemType == OMSimulatorType::TLM) {
+        typeName = HOPSANGUIOMSIMULATORSYSTEMTLMTYPE;
+    }
+    else if(rootSystemType == OMSimulatorType::WeaklyCoupled) {
+        typeName = HOPSANGUIOMSIMULATORSYSTEMWEAKLYCOUPLEDTYPE;
+    }
+    else if(rootSystemType == OMSimulatorType::StronglyCoupled) {
+        typeName = HOPSANGUIOMSIMULATORSYSTEMSTRONGLYCOUPLEDTYPE;
+    }
+    SharedModelObjectAppearanceT appearance = gpLibraryHandler->getModelObjectAppearancePtr(typeName);
+    appearance->setDisplayName(rootSystemName);
+    QPointF center = pNewModelWidget->getGraphicsView()->sceneRect().center();
+    pNewModelWidget->getTopLevelSystemContainer()->addModelObject(appearance.data(),center);
+    SystemContainer *pRootSystem = qobject_cast<SystemContainer*>(pNewModelWidget->getTopLevelSystemContainer()->getModelObject(rootSystemName));
+    pRootSystem->enterContainer();
+}
+
+void ModelHandler::exportOMSimulatorModel()
+{
+    QString filePath = QFileDialog::getSaveFileName(gpMainWindowWidget, tr("Export OMSimulator model to SSP"), gpConfig->getStringSetting(CFG_SSPEXPORTDIR), "System Structure Package (*.ssp)");
+    if(filePath.isEmpty()) {
+        return;
+    }
+    gpConfig->setStringSetting(CFG_SSPEXPORTDIR, QFileInfo(filePath).absolutePath());
+    if(!gpOMSimulatorHandler->exportModel(this->getCurrentTopLevelSystem()->getName(), filePath)) {
+        gpMessageHandler->addErrorMessage("Failed to export model to SSP.");
+    }
+}
+
+void ModelHandler::importOMSimulatorModel()
+{
+    QString filePath = QFileDialog::getOpenFileName(gpMainWindowWidget, tr("Import OMSimulator model from SSP"),gpConfig->getStringSetting(CFG_SSPIMPORTDIR), "System Structure Package (*.ssp)");
+    if(filePath.isEmpty()) {
+        return;
+    }
+    gpConfig->setStringSetting(CFG_SSPIMPORTDIR, QFileInfo(filePath).absolutePath());
+    QString modelName;
+    if(!gpOMSimulatorHandler->importModel(filePath, modelName)) {
+        gpMessageHandler->addErrorMessage("Failed to import model from SSP.");
+        return;
+    }
+
+    QString rootSystemName;
+    if(!gpOMSimulatorHandler->getRootSystemName(modelName, rootSystemName)) {
+        gpMessageHandler->addErrorMessage("Failed to obtain root system name.");
+        return;
+    }
+    if(rootSystemName.isEmpty()) {
+        gpMessageHandler->addErrorMessage("Model must contain a root system.");
+        return;
+    }
+
+    OMSimulatorType rootSystemType;
+    if(!gpOMSimulatorHandler->getElementType(modelName+"."+rootSystemName, rootSystemType)) {
+        gpMessageHandler->addErrorMessage("Wrong system type for root system.");
+        return;
+    }
+
+    //Create OMSimulator model
+    ModelWidget *pNewModelWidget = new ModelWidget(this,gpCentralTabWidget);
+    pNewModelWidget->setIsOMSimulatorModel(true);
+    pNewModelWidget->getTopLevelSystemContainer()->setName(modelName);
+    addModelWidget(pNewModelWidget, modelName, NoLoadOptions);
+    pNewModelWidget->setSaved(true);
+
+    //Create OMSimulator root system
+    QString typeName;
+    if(rootSystemType == OMSimulatorType::TLM) {
+        typeName = HOPSANGUIOMSIMULATORSYSTEMTLMTYPE;
+    }
+    else if(rootSystemType == OMSimulatorType::WeaklyCoupled) {
+        typeName = HOPSANGUIOMSIMULATORSYSTEMWEAKLYCOUPLEDTYPE;
+    }
+    else if(rootSystemType == OMSimulatorType::StronglyCoupled) {
+        typeName = HOPSANGUIOMSIMULATORSYSTEMSTRONGLYCOUPLEDTYPE;
+    }
+    SharedModelObjectAppearanceT appearance = gpLibraryHandler->getModelObjectAppearancePtr(typeName);
+    appearance->setDisplayName(rootSystemName);
+    QPointF center = pNewModelWidget->getGraphicsView()->sceneRect().center();
+    pNewModelWidget->getTopLevelSystemContainer()->addModelObject(appearance.data(),center);
+    SystemContainer *pRootSystem = qobject_cast<SystemContainer*>(pNewModelWidget->getTopLevelSystemContainer()->getModelObject(rootSystemName));
+    pRootSystem->enterContainer();
+
+    loadOMSimulatorSystemContents(pRootSystem);
+}
+
+void ModelHandler::loadOMSimulatorSystemContents(SystemContainer *pSystem) {
+    QString ref = pSystem->getSystemNameHieararchy().join(".");
+    ref.prepend(this->getCurrentTopLevelSystem()->getName()+".");
+    QStringList elementNames;
+    gpOMSimulatorHandler->getSubElementNames(ref, elementNames);
+    for(const QString &elementName : elementNames) {
+        QString elementRef = ref+"."+elementName;
+        OMSimulatorType elementType;
+        gpOMSimulatorHandler->getElementType(elementRef, elementType);
+        QString typeName;
+        QFileInfo fmuFileInfo;
+        if(elementType == OMSimulatorType::WeaklyCoupled) {
+            typeName = HOPSANGUIOMSIMULATORSYSTEMWEAKLYCOUPLEDTYPE;
+        }
+        else if(elementType == OMSimulatorType::StronglyCoupled) {
+            typeName = HOPSANGUIOMSIMULATORSYSTEMSTRONGLYCOUPLEDTYPE;
+        }
+        else if(elementType == OMSimulatorType::FMU) {
+            typeName = HOPSANGUIOMSIMULATORFMUTYPE;
+            gpOMSimulatorHandler->getFMUFileInfoPath(elementRef, fmuFileInfo);
+        }
+        else if(elementType == OMSimulatorType::ExternalModel) {
+            typeName = HOPSANGUIOMSIMULATOREXTERNALMODELTYPE;
+        }
+        else {
+            continue;
+        }
+
+        double x, y, w, h;
+        gpOMSimulatorHandler->getElementGeometry(elementRef,x,y,w,h);
+
+        SystemContainer *pSubSystem = dynamic_cast<SystemContainer*>(pSystem->addOMSimulatorComponent(elementName, elementType, QPointF(x,y),fmuFileInfo));
+
+        //Recursively load contents in sub systems
+        if(pSubSystem) {
+            loadOMSimulatorSystemContents(pSubSystem);
+        }
+    }
+    QList<OMSimulatorConnection> connections;
+    gpOMSimulatorHandler->getConnections(ref, connections);
+    for(const auto &connection : connections) {
+        QString startComponentName = connection.startPort.section(".",-2,-2);
+        QString startPortName = connection.startPort.section(".",-1,-1);
+        Port *pStartPort = pSystem->getModelObject(startComponentName)->getPort(startPortName);
+        QString endComponentName = connection.endPort.section(".",-2,-2);
+        QString endPortName = connection.endPort.section(".",-1,-1);
+        Port *pEndPort = pSystem->getModelObject(endComponentName)->getPort(endPortName);
+        Connector *pConnector = pSystem->createConnector(pStartPort, pEndPort);
+        QStringList geometries;
+        for(int i=0; i<connection.points.size()-1; ++i) {
+            if(connection.points[i].x() == connection.points[i+1].x()) {
+                geometries.append("horizontal");
+            }
+            else if(connection.points[i].y() == connection.points[i+1].y()) {
+                geometries.append("vertical");
+            }
+            else {
+                geometries.append("diagonal");
+            }
+        }
+
+        pConnector->setPointsAndGeometries(connection.points, geometries);
+    }
 }
 
 

@@ -278,6 +278,24 @@ namespace hopsan {
         double *mpCondition;
         bool mAsleep;
     };
+
+    class OMSimulatorSystemTLM : public ComponentSystem
+    {
+    public:
+        static Component* Creator(){ return new OMSimulatorSystemTLM(); }
+    };
+
+    class OMSimulatorSystemWeaklyCoupled : public ComponentSystem
+    {
+    public:
+        static Component* Creator(){ return new OMSimulatorSystemWeaklyCoupled(); }
+    };
+
+    class OMSimulatorSystemStronglyCoupled : public ComponentSystem
+    {
+    public:
+        static Component* Creator(){ return new OMSimulatorSystemStronglyCoupled(); }
+    };
 }
 
 

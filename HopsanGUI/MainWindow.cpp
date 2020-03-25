@@ -915,6 +915,18 @@ void MainWindow::createActions()
     mpToggleHideAllDockAreasAction->setChecked(true);
     connect(mpToggleHideAllDockAreasAction, SIGNAL(toggled(bool)), this, SLOT(toggleHideShowDockAreas(bool)));
 
+    mpNewOMSimulatorModelAction = new QAction(QIcon(QString(ICONPATH) + "svg/Hopsan-New.svg"), tr("New OMSimulator Model"), this);
+    mpNewOMSimulatorModelAction->setText("New OMSimulator Model");
+    connect(mpNewOMSimulatorModelAction, SIGNAL(triggered(bool)), mpModelHandler, SLOT(addNewOMSimulatorModel()));
+
+    mpExportOMSimulatorModelAction = new QAction(QIcon(QString(ICONPATH) + "svg/Hopsan-Save.svg"), tr("Export OMSimulator model to SSP"), this);
+    mpExportOMSimulatorModelAction->setText("Export OMSimulator model to SSP");
+    connect(mpExportOMSimulatorModelAction, SIGNAL(triggered(bool)), mpModelHandler, SLOT(exportOMSimulatorModel()));
+
+    mpImportOMSimulatorModelAction = new QAction(QIcon(QString(ICONPATH) + "svg/Hopsan-Open.svg"), tr("Import OMSimulator model from SSP"), this);
+    mpImportOMSimulatorModelAction->setText("Import OMSimulator model from SSP");
+    connect(mpImportOMSimulatorModelAction, SIGNAL(triggered(bool)), mpModelHandler, SLOT(importOMSimulatorModel()));
+
     mpSimulationTimeEdit = new SimulationTimeEdit(this);
     connect(mpSimulationTimeEdit, SIGNAL(mouseEnterEvent()), this, SLOT(showToolBarHelpPopup()));
 }
@@ -1178,6 +1190,13 @@ void MainWindow::createToolbars()
     mpViewToolBar->addAction(mpTogglePortsAction);
     mpViewToolBar->addAction(mpToggleSignalsAction);
     mpViewToolBar->addAction(mpToggleHideAllDockAreasAction);
+
+    mpOMSimulatorToolBar = new QToolBar("OMSimulator");
+    addToolBar(Qt::TopToolBarArea, mpOMSimulatorToolBar);
+    mpOMSimulatorToolBar->setAllowedAreas(Qt::TopToolBarArea | Qt::LeftToolBarArea | Qt::RightToolBarArea);
+    mpOMSimulatorToolBar->addAction(mpNewOMSimulatorModelAction);
+    mpOMSimulatorToolBar->addAction(mpExportOMSimulatorModelAction);
+    mpOMSimulatorToolBar->addAction(mpImportOMSimulatorModelAction);
 
     //Tools toolbar, contains all tools used to modify the model
     mpToolsToolBar = new QToolBar(tr("Tools Toolbar"));

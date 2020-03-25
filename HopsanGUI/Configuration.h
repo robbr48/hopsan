@@ -86,6 +86,8 @@
 #define CFG_FMUDIR "fmudir"
 #define CFG_FMUIMPORTDIR "fmuimportdir"
 #define CFG_FMUEXPORTDIR "fmuexportdir"
+#define CFG_SSPIMPORTDIR "sspimportdir"
+#define CFG_SSPEXPORTDIR "sspexportdir"
 #define CFG_EXEEXPORTDIR "exeexportdir"
 #define CFG_LABVIEWEXPORTDIR "labviewexportdir"
 #define CFG_PREFERINCLUDEDCOMPILER "preferincludedcompiler"

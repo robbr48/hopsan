@@ -151,6 +151,13 @@
         <file>graphics/porticons/PetrinetPort.svg</file>
         <file>graphics/uiicons/svg/Hopsan-Modelica.svg</file>
         <file>graphics/uiicons/svg/Hopsan-SaveAndRun.svg</file>
+        <file>graphics/builtinCAF/visible/OMSimulator/OMSimulatorSystemTLM.xml</file>
+        <file>graphics/builtinCAF/visible/OMSimulator/OMSimulatorSystemWeaklyCoupled.xml</file>
+        <file>graphics/builtinCAF/visible/OMSimulator/OMSimulatorExternalModel.xml</file>
+        <file>graphics/builtinCAF/visible/OMSimulator/OMSimulatorFMU.xml</file>
+        <file>graphics/builtinCAF/visible/OMSimulator/OMSimulatorSystemStronglyCoupled.xml</file>
+        <file>graphics/builtinCAF/visible/OMSimulator/OMSimulatorInputConnector.xml</file>
+        <file>graphics/builtinCAF/visible/OMSimulator/OMSimulatorOutputConnector.xml</file>
     </qresource>
     <qresource prefix="/license">
         <file alias="licenseNoticeGPLv3">../licenseNoticeGPLv3</file>
