@@ -103,6 +103,9 @@ public:
     bool loadModelRemote();
     bool loadModel(QFile &rModelFile);
 
+    void setIsOMSimulatorModel(bool value=true);
+    bool isOMSimulatorModel() const;
+
     SystemContainer *getTopLevelSystemContainer() const;
     ContainerObject *getViewContainerObject();
     GraphicsView *getGraphicsView();
@@ -176,6 +179,7 @@ private:
     // Remote collected data
     QVector<RemoteResultVariable> mRemoteResultVariables;
     QMutex mSimulateMutex;
+    bool mIsOMSimulatorModel=false;
 };
 
 

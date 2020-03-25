@@ -56,6 +56,7 @@
 #include "Utilities/XMLUtilities.h"
 #include "Dialogs/ComponentPropertiesDialog3.h"
 #include "ModelHandler.h"
+#include "OMSimulatorHandler.h"
 
 #include <cassert>
 
@@ -1281,6 +1282,17 @@ void ModelObject::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
                 alreadyClearedRedo = true;
             }
             mpParentContainerObject->getUndoStackPtr()->registerMovedObject((*it)->mPreviousPos, (*it)->pos(), (*it)->getName());
+        }
+
+        if(gpOMSimulatorHandler->isConnected() && gpModelHandler->getCurrentModel()->isOMSimulatorModel()) {
+            QStringList ref = (*it)->getSystemNameHieararchy();
+            ref.prepend(gpModelHandler->getCurrentTopLevelSystem()->getName());
+            ref.append((*it)->getName());
+            double x = (*it)->getCenterPos().x();
+            double y = (*it)->getCenterPos().y();
+            double h = (*it)->boundingRect().height();
+            double w = (*it)->boundingRect().width();
+            gpOMSimulatorHandler->setElementGeometry(ref.join("."), x,y,h,w);
         }
     }
 

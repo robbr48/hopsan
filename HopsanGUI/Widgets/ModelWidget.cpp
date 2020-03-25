@@ -65,6 +65,7 @@
 #include "LogDataHandler2.h"
 #include "CoreAccess.h"
 #include "GeneratorUtils.h"
+#include "OMSimulatorHandler.h"
 
 //Needed for Modelica experiments, move later if necessary
 #include "ModelicaLibrary.h"
@@ -173,6 +174,10 @@ ModelWidget::~ModelWidget()
 
     setUseRemoteSimulation(false, false);
     delete mpAnimationWidget;
+    if(gpOMSimulatorHandler->isConnected() && mIsOMSimulatorModel) {
+        mIsOMSimulatorModel = false;    //Ugly way to avoid sub elements from deleting themselves when model is already deleted
+        gpOMSimulatorHandler->deleteSubModelOrSystem(mpToplevelSystem->getName());
+    }
     createOrDestroyToplevelSystem(false);
     mpSimulationThreadHandler->deleteLater();
     mpLogDataHandler->setParent(nullptr);
@@ -588,6 +593,18 @@ void ModelWidget::setSaved(bool value)
 
 bool ModelWidget::simulate_nonblocking()
 {
+    if(mIsOMSimulatorModel) {
+        if(!gpOMSimulatorHandler->instantiate(mpToplevelSystem->getName())) {
+            gpMessageHandler->addErrorMessage("Failed to instantiateOMSimulator model.");
+            return false;
+        }
+        if(!gpOMSimulatorHandler->initialize(mpToplevelSystem->getName())) {
+            gpMessageHandler->addErrorMessage("Failed to initialize OMSimulator model.");
+            return false;
+        }
+        return gpOMSimulatorHandler->simulate(mpToplevelSystem->getName());
+    }
+
     // Save backup copy (if needed)
     if (!isSaved() && gpConfig->getBoolSetting(CFG_AUTOBACKUP))
     {
@@ -1751,6 +1768,16 @@ bool ModelWidget::loadModel(QFile &rModelFile)
         gpMessageHandler->addErrorMessage(QString("Model does not contain a HMF root tag: ")+HMF_ROOTTAG);
         return false;
     }
+}
+
+void ModelWidget::setIsOMSimulatorModel(bool value)
+{
+    mIsOMSimulatorModel = value;
+}
+
+bool ModelWidget::isOMSimulatorModel() const
+{
+    return mIsOMSimulatorModel;
 }
 
 QDomDocument ModelWidget::saveToDom(SaveContentsEnumT contents)

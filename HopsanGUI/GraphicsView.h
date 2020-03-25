@@ -42,6 +42,7 @@
 #include "GraphicsViewPort.h"
 
 //Forward Declarations
+enum class OMSimulatorType;
 class ContainerObject;
 class ModelWidget;
 
@@ -108,6 +109,7 @@ private slots:
     void insertComponentFromLineEdit();
 
 private:
+    void insertOMSimulatorComponent(OMSimulatorType type, QPoint pos);
     QColor mIsoColor;
     bool mCtrlKeyPressed;
     bool mShiftKeyPressed;

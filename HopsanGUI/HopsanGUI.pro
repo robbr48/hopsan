@@ -151,6 +151,8 @@ QMAKE_CXXFLAGS *= -U__STRICT_ANSI__ -Wno-c++0x-compat
 # Platform specific additional project options
 # -------------------------------------------------
 unix {
+    LIBS += -ldl
+
     # Set Python paths
     contains(DEFINES, USEPYTHONQT) {
         !build_pass:message("Looking for Python include and lib paths since USEPYTHONQT is defined")
@@ -308,7 +310,8 @@ SOURCES += main.cpp \
     Utilities/WebviewWrapper.cpp \
     GeneratorUtils.cpp \
     Dialogs/OptimizationScriptWizard.cpp \
-    Widgets/TextEditorWidget.cpp
+    Widgets/TextEditorWidget.cpp \
+    OMSimulatorHandler.cpp
 
 HEADERS += MainWindow.h \
     Widgets/ProjectTabWidget.h \
@@ -402,7 +405,8 @@ HEADERS += MainWindow.h \
     Utilities/WebviewWrapper.h \
     GeneratorUtils.h \
     Dialogs/OptimizationScriptWizard.h \
-    Widgets/TextEditorWidget.h
+    Widgets/TextEditorWidget.h \
+    OMSimulatorHandler.h
 
     contains(DEFINES, USEPYTHONQT) {
         SOURCES += Widgets/PyDockWidget.cpp

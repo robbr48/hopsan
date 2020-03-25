@@ -142,6 +142,7 @@ bool Component::setParameterValue(QString name, QString value, bool force)
 {
     bool retval =  mpParentContainerObject->getCoreSystemAccessPtr()->setParameterValue(this->getName(), name, value, force);
 
+#define EXPERIMENTAL
 #ifdef EXPERIMENTAL
     //Special code for setting parameters to Modelica components. Should maybe be somewhere else.
     if(this->getTypeName() == MODELICATYPENAME && name == "model")

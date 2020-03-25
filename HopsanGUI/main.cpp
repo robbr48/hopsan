@@ -51,6 +51,8 @@
 #include "Widgets/HcomWidget.h"
 #include "HcomHandler.h"
 #include "Dialogs/LicenseDialog.h"
+#include "OMSimulatorHandler.h"
+
 
 // Declare global pointers
 MainWindow* gpMainWindow = 0;
@@ -60,6 +62,7 @@ DesktopHandler *gpDesktopHandler = 0;
 CopyStack *gpCopyStack = 0;
 QSplashScreen *gpSplash = 0;
 GUIMessageHandler *gpMessageHandler = 0;
+OMSimulatorHandler *gpOMSimulatorHandler = 0;
 
 int main(int argc, char *argv[])
 {
@@ -100,6 +103,7 @@ int main(int argc, char *argv[])
     gpConfig = new Configuration();
     gpCopyStack = new CopyStack();
     gpMessageHandler = new GUIMessageHandler();
+    gpOMSimulatorHandler = new OMSimulatorHandler();
 
     gpConfig->connect(gpConfig, SIGNAL(recentModelsListChanged()), gpMainWindow, SLOT(updateRecentList()));
 
@@ -116,6 +120,24 @@ int main(int argc, char *argv[])
 
     // Process any received messages
     gpMessageHandler->startPublish();
+
+
+    /////////////////////////////////////////
+
+    QString version;
+    gpOMSimulatorHandler->getVersion(version);
+    gpMessageHandler->addInfoMessage("Trying version: "+version);
+    gpOMSimulatorHandler->connect("/home/robbr48/git/OpenModelica/build/lib/x86_64-linux-gnu/omc/libOMSimulator.so");
+    gpOMSimulatorHandler->setLogFile("/home/robbr48/slask/omslog.txt");
+    gpOMSimulatorHandler->getVersion(version);
+    gpMessageHandler->addInfoMessage("Trying version: "+version);
+    gpOMSimulatorHandler->newModel("test");
+    gpOMSimulatorHandler->addSystem("test.system",OMSimulatorType::TLM);
+    QString contents;
+    gpOMSimulatorHandler->list("test", contents);
+    gpMessageHandler->addInfoMessage(contents);
+    /////////////////////////////////////////
+
 
     // Show license dialog
     if (gpConfig->getBoolSetting(CFG_SHOWLICENSEONSTARTUP))

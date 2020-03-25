@@ -49,6 +49,8 @@ class SimulationThreadHandler;
 class DebuggerWidget;
 class TextEditorWidget;
 
+enum class OMSimulatorType;
+
 class ModelStateInfo
 {
 public:
@@ -99,6 +101,9 @@ public:
 
 public slots:
     ModelWidget *addNewModel(QString modelName="Untitled", ModelHandler::LoadOptions options=NoLoadOptions);
+    void addNewOMSimulatorModel();
+    void exportOMSimulatorModel();
+    void importOMSimulatorModel();
     void loadModel();
     void loadModel(QAction *action);
     void newTextFile();
@@ -146,6 +151,7 @@ private:
     void connectMainWindowConnections(ModelWidget *pModel);
     void connectMainWindowConnections(TextEditorWidget *pScriptEditor);
     void setToolBarSimulationTimeFromTab(ModelWidget *pModel);
+    void loadOMSimulatorSystemContents(SystemContainer *pSystem);
 
     QList<ModelWidget*> mModelPtrs;
     QList<TextEditorWidget*> mTextEditors;

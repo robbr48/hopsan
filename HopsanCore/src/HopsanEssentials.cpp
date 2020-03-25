@@ -35,6 +35,7 @@
 #include "CoreUtilities/ClassFactoryStatusCheck.hpp"
 #include "Components/DummyComponent.hpp"
 #include "Components/ModelicaComponent.hpp"
+#include "Components/OMSimulatorComponents.hpp"
 #include "CoreUtilities/HmfLoader.h"
 #include "CoreUtilities/LoadExternal.h"
 #include "CoreUtilities/HopsanCoreMessageHandler.h"
@@ -109,6 +110,11 @@ HopsanEssentials::HopsanEssentials()
     mpComponentFactory->registerCreatorFunction(HOPSAN_BUILTIN_TYPENAME_CONDITIONALSUBSYSTEM, ConditionalComponentSystem::Creator);
     mpComponentFactory->registerCreatorFunction(HOPSAN_BUILTIN_TYPENAME_CPPCOMPONENT, DummyComponent::Creator);
     mpComponentFactory->registerCreatorFunction(HOPSAN_BUILTIN_TYPENAME_MODELICACOMPONENT, ModelicaComponent::Creator);
+    mpComponentFactory->registerCreatorFunction(HOPSAN_BUILTIN_TYPENAME_OMSIMULATOR_SYSTEM_TLM, OMSimulatorSystemTLM::Creator);
+    mpComponentFactory->registerCreatorFunction(HOPSAN_BUILTIN_TYPENAME_OMSIMULATOR_SYSTEM_WEAKLY_COUPLED, OMSimulatorSystemWeaklyCoupled::Creator);
+    mpComponentFactory->registerCreatorFunction(HOPSAN_BUILTIN_TYPENAME_OMSIMULATOR_SYSTEM_STRONGLY_COUPLED, OMSimulatorSystemStronglyCoupled::Creator);
+    mpComponentFactory->registerCreatorFunction(HOPSAN_BUILTIN_TYPENAME_OMSIMULATOR_FMU, OMSimulatorFMU::Creator);
+    mpComponentFactory->registerCreatorFunction(HOPSAN_BUILTIN_TYPENAME_OMSIMULATOR_EXTERNAL_MODEL, OMSimulatorExternalModel::Creator);
 #ifdef HOPSAN_INTERNALDEFAULTCOMPONENTS
     register_default_components(mpComponentFactory);
 #endif

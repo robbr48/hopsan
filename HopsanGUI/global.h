@@ -65,6 +65,7 @@ class FindWidget;
 class ModelicaLibrary;
 class ModelicaEditor;
 class PlotWidget2;
+class OMSimulatorHandler;
 
 // Global pointer to the main window and QWidget cast version
 extern MainWindow* gpMainWindow;
@@ -76,6 +77,7 @@ extern DesktopHandler *gpDesktopHandler;
 extern CopyStack *gpCopyStack;
 extern QSplashScreen *gpSplash;
 extern GUIMessageHandler *gpMessageHandler;
+extern OMSimulatorHandler *gpOMSimulatorHandler;
 
 // Global object pointers that are children to main window
 extern PlotHandler *gpPlotHandler;
