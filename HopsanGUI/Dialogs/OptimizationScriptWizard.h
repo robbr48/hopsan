@@ -129,6 +129,7 @@ private:
     QLineEdit *mpBetaLineEdit;
     QLineEdit *mpGammaLineEdit;
     QCheckBox *mpWeightedCentroidBox;
+    QCheckBox *mpExtraReflectionsBox;
     QLineEdit *mpRhoLineEdit;
     QLineEdit *mpSigmaLineEdit;
     QLabel *mpOmega1Label;

@@ -23,6 +23,7 @@ opt set alpha <<<alpha>>>
 opt set beta <<<beta>>>
 opt set gamma <<<gamma>>>
 opt set weightedcentroids <<<weightedcentroids>>>
+opt set extrareflevtions <<<extrarefletions>>>
 opt set finaleval <<<finaleval>>>
 opt set printresultfile on
 opt set printlogfile off

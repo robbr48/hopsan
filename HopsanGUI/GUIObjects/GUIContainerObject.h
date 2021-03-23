@@ -87,6 +87,7 @@ public:
     double mRandfac;
     double mForgfac;
     bool mWeightedCentroid;
+    bool mExtraReflections;
     double mPartol;
     bool mPlot;
     bool mSavecsv;

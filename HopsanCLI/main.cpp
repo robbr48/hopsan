@@ -425,6 +425,7 @@ int main(int argc, char *argv[])
             double beta = 0.3;
             double gamma = 2.0;
             bool weightedCentroids = false;
+            bool extraReflections = false;
             double rho = 0.5;
             double sigma = -0.5;
             double omega1 = 1.0;
@@ -525,6 +526,10 @@ int main(int argc, char *argv[])
                 else if(words.size() == 1 && words[0] == "weightedcentroids")
                 {
                     weightedCentroids = true;
+                }
+                else if(words.size() == 1 && words[0] == "extrareflections")
+                {
+                    extraReflections = true;
                 }
                 else if(words.size() == 2 && words[0] == "rho")
                 {
@@ -707,6 +712,7 @@ int main(int argc, char *argv[])
                         pWorker->setForgettingFactor(gamma);
                         pWorker->setRandomFactor(beta);
                         pWorker->setUseWeightedCentroids(weightedCentroids);
+                        pWorker->setUseExtraRefletions(extraReflections);
                     }
                     else if(algorithm == "complexrfp")
                     {

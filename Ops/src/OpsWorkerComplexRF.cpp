@@ -122,6 +122,22 @@ void WorkerComplexRF::run()
             }
         }
 
+        while(mUseExtraRefletions && (mLastWorstId == mBestId) && !mpMessageHandler->aborted()) {
+            mCandidatePoints[0] = reflect(mCandidatePoints[0], mCentroidPoint, -2);
+
+            mpEvaluator->evaluateCandidate(0);
+            if(mCandidateObjectives[0] < mObjectives[mWorstId]) {
+                mPoints[mWorstId] = mCandidatePoints[0];
+                mObjectives[mWorstId] = mCandidateObjectives[0];
+                mpMessageHandler->pointChanged(mWorstId);
+                mpMessageHandler->objectiveChanged(mWorstId);
+                calculateBestAndWorstId();
+            }
+            else {
+                break;
+            }
+        }
+
         if(doBreak)
         {
             break;
@@ -156,6 +172,11 @@ void WorkerComplexRF::setReflectionFactor(double value)
 void WorkerComplexRF::setForgettingFactor(double value)
 {
     mGamma = value;
+}
+
+void WorkerComplexRF::setUseExtraRefletions(bool value)
+{
+    mUseExtraRefletions = value;
 }
 
 bool WorkerComplexRF::retract()

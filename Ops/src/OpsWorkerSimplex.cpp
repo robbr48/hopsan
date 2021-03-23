@@ -124,6 +124,18 @@ void WorkerSimplex::findWeightedCentroidPoint()
     removeFromVector(points, mWorstId);
     std::vector<double> weights = mObjectives;
     removeFromVector(weights, mWorstId);
+
+    //Invert order of weights, assure they are all positive and that the minimum weight is 1
+    double maxWeight = -std::numeric_limits<double>::max();
+    for(size_t i=0; i<weights.size(); ++i) {
+        if(weights[i] > maxWeight) {
+            maxWeight = weights[i];
+        }
+    }
+    for(size_t i=0; i<weights.size(); ++i) {
+        weights[i] = maxWeight +1 - weights[i];
+    }
+
     WorkerSimplex::findWeightedCentroidPoint(points, weights);
 }
 

@@ -152,7 +152,7 @@ void OptimizationHandler::startOptimization(ModelWidget *pModel, QString &modelP
         mpWorker->initialize();
         mpWorker->run();
 
-        mpMessageHandler->addInfoMessage("Optimization finished!");
+        mpMessageHandler->addInfoMessage("Optimization finished after "+QString::number(mpWorker->getCurrentNumberOfIterations())+" iterations and "+QString::number(mEvaluations)+" evaluations.");
         gpOptimizationDialog->updateTotalProgressBar(/*mpWorker->getMaxNumberOfIterations()*/100);
         this->setIsRunning(false);
         if(mDisconnectedFromModelHandler)
@@ -523,6 +523,10 @@ void OptimizationHandler::setOptVar(const QString &var, const QString &value, bo
         else if(var == "weightedcentroids")
         {
             pWorker->setUseWeightedCentroids(value == "on");
+        }
+        else if(var == "extrareflections")
+        {
+            pWorker->setUseExtraRefletions(value == "on");
         }
     }
     if(mpWorker->getAlgorithm() == Ops::ComplexRFP)

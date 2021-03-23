@@ -138,7 +138,7 @@ protected:
     std::vector< std::vector<double> > mCandidatePoints;
     std::vector<double> mCandidateObjectives;
     std::vector<double> mObjectives;
-    double mnMaxIterations;
+    size_t mnMaxIterations;
     size_t mWorstId, mBestId, mLastWorstId, mSecondBestId;
     double mTolerance;
     SamplingT mDistribution;

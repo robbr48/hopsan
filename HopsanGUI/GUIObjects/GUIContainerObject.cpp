@@ -4132,6 +4132,7 @@ void SystemObject::saveOptimizationSettingsToDomElement(QDomElement &rDomElement
     appendDomValueNode(XMLsetting, HMF_RANDOMFACTOR, mOptSettings.mRandfac);
     appendDomValueNode(XMLsetting, HMF_FORGETTINGFACTOR, mOptSettings.mForgfac);
     appendDomBooleanNode(XMLsetting, HMF_WEIGHTEDCENTROID, mOptSettings.mWeightedCentroid);
+    appendDomBooleanNode(XMLsetting, HMF_EXTRAREFLECTIONS, mOptSettings.mExtraReflections);
     appendDomValueNode(XMLsetting, HMF_PARTOL, mOptSettings.mPartol);
     appendDomBooleanNode(XMLsetting, HMF_PLOT, mOptSettings.mPlot);
     appendDomBooleanNode(XMLsetting, HMF_SAVECSV, mOptSettings.mSavecsv);
@@ -4197,6 +4198,7 @@ void SystemObject::loadOptimizationSettingsFromDomElement(QDomElement &rDomEleme
         mOptSettings.mRandfac = parseDomValueNode(settingsElement.firstChildElement(HMF_RANDOMFACTOR), mOptSettings.mRandfac);
         mOptSettings.mForgfac = parseDomValueNode(settingsElement.firstChildElement(HMF_FORGETTINGFACTOR), mOptSettings.mForgfac);
         mOptSettings.mWeightedCentroid = parseDomBooleanNode(settingsElement.firstChildElement(HMF_WEIGHTEDCENTROID), mOptSettings.mWeightedCentroid);
+        mOptSettings.mExtraReflections = parseDomBooleanNode(settingsElement.firstChildElement(HMF_EXTRAREFLECTIONS), mOptSettings.mExtraReflections);
         mOptSettings.mPartol = parseDomValueNode(settingsElement.firstChildElement(HMF_PARTOL), mOptSettings.mPartol);
         mOptSettings.mPlot = parseDomBooleanNode(settingsElement.firstChildElement(HMF_PLOT), mOptSettings.mPlot);
         mOptSettings.mSavecsv = parseDomBooleanNode(settingsElement.firstChildElement(HMF_SAVECSV), mOptSettings.mSavecsv);
@@ -4955,6 +4957,7 @@ OptimizationSettings::OptimizationSettings()
     mRandfac=.3;
     mForgfac=0.0;
     mWeightedCentroid=true;
+    mExtraReflections=true;
     mPartol=.0001;
     mPlot=true;
     mSavecsv=false;

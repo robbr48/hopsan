@@ -128,6 +128,9 @@ OptimizationScriptWizard::OptimizationScriptWizard(SystemObject* pSystem, QWidge
     mpWeightedCentroidBox = new QCheckBox("Weighted centroids", this);
     mpWeightedCentroidBox->setChecked(true);
 
+    mpExtraReflectionsBox = new QCheckBox("Expand reflection on success", this);
+    mpExtraReflectionsBox->setChecked(true);
+
     mpRhoLabel = new QLabel("Contraction factor: ");
     mpRhoLineEdit = new QLineEdit("0.3", this);
     mpRhoLineEdit->setValidator(new QDoubleValidator());
@@ -238,6 +241,7 @@ OptimizationScriptWizard::OptimizationScriptWizard(SystemObject* pSystem, QWidge
     pSettingsLayout->addWidget(mpGammaLabel,           row,   0);
     pSettingsLayout->addWidget(mpGammaLineEdit,        row++, 1);
     pSettingsLayout->addWidget(mpWeightedCentroidBox,  row++, 0, 1, 2);
+    pSettingsLayout->addWidget(mpExtraReflectionsBox,  row++, 0, 1, 2);
     pSettingsLayout->addWidget(mpRhoLabel,             row,   0);
     pSettingsLayout->addWidget(mpRhoLineEdit,          row++, 1);
     pSettingsLayout->addWidget(mpSigmaLabel,           row,   0);
@@ -618,6 +622,7 @@ void OptimizationScriptWizard::setAlgorithm(int i)
     mpGammaLabel->setVisible(false);
     mpGammaLineEdit->setVisible(false);
     mpWeightedCentroidBox->setVisible(false);
+    mpExtraReflectionsBox->setVisible(false);
     mpRhoLabel->setVisible(false);
     mpRhoLineEdit->setVisible(false);
     mpSigmaLabel->setVisible(false);
@@ -678,6 +683,7 @@ void OptimizationScriptWizard::setAlgorithm(int i)
         mpGammaLabel->setText("Forgetting Factor");  //Used by multiple algorithms
         mpGammaLineEdit->setVisible(true);
         mpWeightedCentroidBox->setVisible(true);
+        mpExtraReflectionsBox->setVisible(true);
         mpAlphaLineEdit->setText("1.3");
         mpBetaLineEdit->setText("0.3");
         mpRhoLineEdit->setText("0.3");
@@ -966,6 +972,7 @@ void OptimizationScriptWizard::saveConfiguration()
     optSettings.mRandfac = mpBetaLineEdit->text().toDouble();
     optSettings.mForgfac = mpGammaLineEdit->text().toDouble();
     optSettings.mWeightedCentroid = mpWeightedCentroidBox->isChecked();
+    optSettings.mExtraReflections = mpExtraReflectionsBox->isChecked();
     optSettings.mPartol = mpEpsilonXLineEdit->text().toDouble();
     optSettings.mSavecsv = mpExport2CSVBox->isChecked();
     optSettings.mFinalEval = mpFinalEvalCheckBox->isChecked();
@@ -1132,6 +1139,12 @@ void OptimizationScriptWizard::generateComplexRFScript(const QString &subAlgorit
     }
     else {
         templateCode.replace("<<<weightedcentroids>>>", "off");
+    }
+    if(mpExtraReflectionsBox->isChecked()) {
+        templateCode.replace("<<<extrareflections>>>", "on");
+    }
+    else {
+        templateCode.replace("<<<extrareflections>>>", "off");
     }
 
     mScript = templateCode;
@@ -1500,6 +1513,7 @@ void OptimizationScriptWizard::loadConfiguration()
     mpBetaLineEdit->setText(QString().setNum(optSettings.mRandfac));
     mpGammaLineEdit->setText(QString().setNum(optSettings.mForgfac));
     mpWeightedCentroidBox->setChecked(optSettings.mWeightedCentroid);
+    mpExtraReflectionsBox->setChecked(optSettings.mExtraReflections);
     mpEpsilonXLineEdit->setText(QString().setNum(optSettings.mPartol));
     mpExport2CSVBox->setChecked(optSettings.mSavecsv);
     mpFinalEvalCheckBox->setChecked(optSettings.mFinalEval);

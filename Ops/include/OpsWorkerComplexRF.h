@@ -50,6 +50,7 @@ public:
 
     void setReflectionFactor(double value);
     void setForgettingFactor(double value);
+    void setUseExtraRefletions(bool value);
 
 protected:
     void applyForgettingFactor();
@@ -58,6 +59,7 @@ protected:
     bool mNeedsRetraction;
     int mRetractionCounter;
     double mKf;
+    bool mUseExtraRefletions = false;
 
     double mAlpha, mGamma;
 };
