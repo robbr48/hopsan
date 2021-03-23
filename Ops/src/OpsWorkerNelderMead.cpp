@@ -183,7 +183,6 @@ void WorkerNelderMead::setReductionFactor(double value)
     mSigma = value;
 }
 
-
 void WorkerNelderMead::reduce()
 {
     for(size_t i=0; i<mNumPoints; ++i)

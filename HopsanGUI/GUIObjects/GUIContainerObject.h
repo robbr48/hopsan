@@ -86,6 +86,7 @@ public:
     double mRefcoeff;
     double mRandfac;
     double mForgfac;
+    bool mWeightedCentroid;
     double mPartol;
     bool mPlot;
     bool mSavecsv;

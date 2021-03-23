@@ -80,11 +80,20 @@ void WorkerSimplex::setRandomFactor(double value)
     mRandomFactor = value;
 }
 
+void WorkerSimplex::setUseWeightedCentroids(bool value)
+{
+    mUseWeightedCentroids = value;
+}
+
 
 
 
 void WorkerSimplex::findCentroidPoint()
 {
+    if(mUseWeightedCentroids) {
+        findWeightedCentroidPoint();
+        return;
+    }
     std::vector< std::vector<double> > points = mPoints;
     removeFromVector(points,mWorstId);
     WorkerSimplex::findCentroidPoint(points);
@@ -106,5 +115,35 @@ void WorkerSimplex::findCentroidPoint(std::vector<std::vector<double> > &points)
     for(size_t i=0; i<mNumParameters; ++i)
     {
         mCentroidPoint[i] = mCentroidPoint[i]/double(points.size());
+    }
+}
+
+void WorkerSimplex::findWeightedCentroidPoint()
+{
+    std::vector< std::vector<double> > points = mPoints;
+    removeFromVector(points, mWorstId);
+    std::vector<double> weights = mObjectives;
+    removeFromVector(weights, mWorstId);
+    WorkerSimplex::findWeightedCentroidPoint(points, weights);
+}
+
+void WorkerSimplex::findWeightedCentroidPoint(std::vector<std::vector<double> > &points, std::vector<double> &weights)
+{
+    for(size_t i=0; i<mNumParameters; ++i) {
+        mCentroidPoint[i] = 0;
+    }
+    for(size_t p=0; p<points.size(); ++p) {
+        for(size_t i=0; i<mNumParameters; ++i) {
+            mCentroidPoint[i] = mCentroidPoint[i]+points[p][i]*weights[p];
+        }
+    }
+    double totalWeight = 0;
+    for(const auto &weight : weights) {
+        totalWeight += weight;
+    }
+    double averageWeight = totalWeight/weights.size();
+    for(size_t i=0; i<mNumParameters; ++i) {
+        mCentroidPoint[i] /= double(points.size());
+        mCentroidPoint[i] /= averageWeight;
     }
 }

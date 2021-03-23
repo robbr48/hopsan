@@ -424,6 +424,7 @@ int main(int argc, char *argv[])
             double alpha = 1.3;
             double beta = 0.3;
             double gamma = 2.0;
+            bool weightedCentroids = false;
             double rho = 0.5;
             double sigma = -0.5;
             double omega1 = 1.0;
@@ -520,6 +521,10 @@ int main(int argc, char *argv[])
                 else if(words.size() == 2 && words[0] == "gamma")
                 {
                     gamma = std::stod(words[1]);
+                }
+                else if(words.size() == 1 && words[0] == "weightedcentroids")
+                {
+                    weightedCentroids = true;
                 }
                 else if(words.size() == 2 && words[0] == "rho")
                 {
@@ -693,6 +698,7 @@ int main(int argc, char *argv[])
                         pWorker->setExpansionFactor(gamma);
                         pWorker->setContractionFactor(rho);
                         pWorker->setReductionFactor(sigma);
+                        pWorker->setUseWeightedCentroids(weightedCentroids);
                     }
                     else if(algorithm == "complexrf")
                     {
@@ -700,6 +706,7 @@ int main(int argc, char *argv[])
                         pWorker->setReflectionFactor(alpha);
                         pWorker->setForgettingFactor(gamma);
                         pWorker->setRandomFactor(beta);
+                        pWorker->setUseWeightedCentroids(weightedCentroids);
                     }
                     else if(algorithm == "complexrfp")
                     {
@@ -723,6 +730,7 @@ int main(int argc, char *argv[])
                         pWorker->setMaximumReflectionFactor(alphaMax);
                         pWorker->setNumberOfPredictions(nPredictions);
                         pWorker->setNumberOfRetractions(nRetractions);
+                        pWorker->setUseWeightedCentroids(weightedCentroids);
                     }
                     else if(algorithm == "complexburmen")
                     {
@@ -730,6 +738,7 @@ int main(int argc, char *argv[])
                         pWorker->setReflectionFactor(alpha);
                         pWorker->setRandomFactor(beta);
                         pWorker->setForgettingFactor(gamma);
+                        pWorker->setUseWeightedCentroids(weightedCentroids);
                     }
                     else if(algorithm == "de")
                     {

@@ -128,6 +128,7 @@ private:
     QLabel *mpSigmaLabel;
     QLineEdit *mpBetaLineEdit;
     QLineEdit *mpGammaLineEdit;
+    QCheckBox *mpWeightedCentroidBox;
     QLineEdit *mpRhoLineEdit;
     QLineEdit *mpSigmaLineEdit;
     QLabel *mpOmega1Label;

@@ -208,6 +208,7 @@ void updateRenamedComponentName(QDomElement &rDomElement, const QString oldName,
 #define HMF_REFLCOEFF "refcoeff"
 #define HMF_RANDOMFACTOR "randfac"
 #define HMF_FORGETTINGFACTOR "forgfac"
+#define HMF_WEIGHTEDCENTROID "weightedcentroid"
 #define HMF_PARTOL "partol"
 #define HMF_PLOT "plot"
 #define HMF_SAVECSV "savecsv"

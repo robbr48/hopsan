@@ -520,6 +520,10 @@ void OptimizationHandler::setOptVar(const QString &var, const QString &value, bo
         {
             pWorker->setForgettingFactor(value.toDouble());
         }
+        else if(var == "weightedcentroids")
+        {
+            pWorker->setUseWeightedCentroids(value == "on");
+        }
     }
     if(mpWorker->getAlgorithm() == Ops::ComplexRFP)
     {
@@ -574,6 +578,10 @@ void OptimizationHandler::setOptVar(const QString &var, const QString &value, bo
         else if(var == "sigma")
         {
             pWorker->setReductionFactor(value.toDouble());
+        }
+        else if(var == "weightedcentroids")
+        {
+            pWorker->setUseWeightedCentroids(value == "on");
         }
     }
     else if(mpWorker->getAlgorithm() == Ops::ParticleSwarm)

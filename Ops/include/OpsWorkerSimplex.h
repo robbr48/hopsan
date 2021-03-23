@@ -48,13 +48,17 @@ public:
     std::vector<double> reflect(std::vector<double> point, std::vector<double> center, double alpha);
 
     void setRandomFactor(double value);
+    void setUseWeightedCentroids(bool value);
 
     void findCentroidPoint();
     void findCentroidPoint(std::vector<std::vector<double> > &points);
+    void findWeightedCentroidPoint();
+    void findWeightedCentroidPoint(std::vector<std::vector<double> > &points, std::vector<double> &weights);
 protected:
     double mRandomFactor;
 
     std::vector<double> mCentroidPoint;
+    bool mUseWeightedCentroids;
 };
 
 }

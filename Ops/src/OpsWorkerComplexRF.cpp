@@ -108,13 +108,10 @@ void WorkerComplexRF::run()
         bool doBreak = false;
         while(mLastWorstId == mWorstId && !mpMessageHandler->aborted())
         {
-           // mpMessageHandler->stepCompleted(mIterationCounter);
-
             mpMessageHandler->stepCompleted(mIterationCounter);
 
             if(mIterationCounter>=mnMaxIterations)
             {
-                //--mIterationCounter;    //Needed because for-loop will increase it by one anyway
                 break;
             }
 

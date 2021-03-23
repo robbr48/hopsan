@@ -125,6 +125,9 @@ OptimizationScriptWizard::OptimizationScriptWizard(SystemObject* pSystem, QWidge
     mpGammaLineEdit = new QLineEdit("0.3", this);
     mpGammaLineEdit->setValidator(new QDoubleValidator());
 
+    mpWeightedCentroidBox = new QCheckBox("Weighted centroids", this);
+    mpWeightedCentroidBox->setChecked(true);
+
     mpRhoLabel = new QLabel("Contraction factor: ");
     mpRhoLineEdit = new QLineEdit("0.3", this);
     mpRhoLineEdit->setValidator(new QDoubleValidator());
@@ -234,6 +237,7 @@ OptimizationScriptWizard::OptimizationScriptWizard(SystemObject* pSystem, QWidge
     pSettingsLayout->addWidget(mpC1LineEdit,           row++, 1);
     pSettingsLayout->addWidget(mpGammaLabel,           row,   0);
     pSettingsLayout->addWidget(mpGammaLineEdit,        row++, 1);
+    pSettingsLayout->addWidget(mpWeightedCentroidBox,  row++, 0, 1, 2);
     pSettingsLayout->addWidget(mpRhoLabel,             row,   0);
     pSettingsLayout->addWidget(mpRhoLineEdit,          row++, 1);
     pSettingsLayout->addWidget(mpSigmaLabel,           row,   0);
@@ -250,8 +254,8 @@ OptimizationScriptWizard::OptimizationScriptWizard(SystemObject* pSystem, QWidge
     pSettingsLayout->addWidget(mpCPLineEdit,           row++, 1);
     pSettingsLayout->addWidget(mpMPLabel,              row,   0);
     pSettingsLayout->addWidget(mpMPLineEdit,           row++, 1);
-    pSettingsLayout->addWidget(mpElitesLabel,              row,   0);
-    pSettingsLayout->addWidget(mpElitesLineEdit,           row++, 1);
+    pSettingsLayout->addWidget(mpElitesLabel,          row,   0);
+    pSettingsLayout->addWidget(mpElitesLineEdit,       row++, 1);
     pSettingsLayout->addWidget(mpNumModelsLabel,       row,   0);
     pSettingsLayout->addWidget(mpNumModelsLineEdit,    row++, 1);
     pSettingsLayout->addWidget(mpMethodLabel,          row,   0);
@@ -613,6 +617,7 @@ void OptimizationScriptWizard::setAlgorithm(int i)
     mpBetaLineEdit->setVisible(false);
     mpGammaLabel->setVisible(false);
     mpGammaLineEdit->setVisible(false);
+    mpWeightedCentroidBox->setVisible(false);
     mpRhoLabel->setVisible(false);
     mpRhoLineEdit->setVisible(false);
     mpSigmaLabel->setVisible(false);
@@ -672,6 +677,7 @@ void OptimizationScriptWizard::setAlgorithm(int i)
         mpGammaLabel->setVisible(true);
         mpGammaLabel->setText("Forgetting Factor");  //Used by multiple algorithms
         mpGammaLineEdit->setVisible(true);
+        mpWeightedCentroidBox->setVisible(true);
         mpAlphaLineEdit->setText("1.3");
         mpBetaLineEdit->setText("0.3");
         mpRhoLineEdit->setText("0.3");
@@ -959,6 +965,7 @@ void OptimizationScriptWizard::saveConfiguration()
     optSettings.mRefcoeff = mpAlphaLineEdit->text().toDouble();
     optSettings.mRandfac = mpBetaLineEdit->text().toDouble();
     optSettings.mForgfac = mpGammaLineEdit->text().toDouble();
+    optSettings.mWeightedCentroid = mpWeightedCentroidBox->isChecked();
     optSettings.mPartol = mpEpsilonXLineEdit->text().toDouble();
     optSettings.mSavecsv = mpExport2CSVBox->isChecked();
     optSettings.mFinalEval = mpFinalEvalCheckBox->isChecked();
@@ -1120,6 +1127,12 @@ void OptimizationScriptWizard::generateComplexRFScript(const QString &subAlgorit
     templateCode.replace("<<<gamma>>>", mpGammaLineEdit->text());
     templateCode.replace("<<<partol>>>", mpEpsilonXLineEdit->text());
     templateCode.replace("<<<extravars>>>", extraVars);
+    if(mpWeightedCentroidBox->isChecked()) {
+        templateCode.replace("<<<weightedcentroids>>>", "on");
+    }
+    else {
+        templateCode.replace("<<<weightedcentroids>>>", "off");
+    }
 
     mScript = templateCode;
 }
@@ -1486,6 +1499,7 @@ void OptimizationScriptWizard::loadConfiguration()
     mpAlphaLineEdit->setText(QString().setNum(optSettings.mRefcoeff));
     mpBetaLineEdit->setText(QString().setNum(optSettings.mRandfac));
     mpGammaLineEdit->setText(QString().setNum(optSettings.mForgfac));
+    mpWeightedCentroidBox->setChecked(optSettings.mWeightedCentroid);
     mpEpsilonXLineEdit->setText(QString().setNum(optSettings.mPartol));
     mpExport2CSVBox->setChecked(optSettings.mSavecsv);
     mpFinalEvalCheckBox->setChecked(optSettings.mFinalEval);
