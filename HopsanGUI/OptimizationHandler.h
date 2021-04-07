@@ -99,7 +99,7 @@ class OptimizationHandler : public QObject
 public:
     //Enums
     enum DataT{Integer, Double};
-    enum AlgorithmT{NelderMead, ComplexRF, ComplexRFM, ComplexRFP, PSO, ParameterSweep, Uninitialized};
+    enum AlgorithmT{NelderMead, ComplexRF, ComplexRFM, ComplexRFP, PSO, ParameterSweep, SimplexSwarm, Uninitialized};
     enum PointPlotContentT{AllPoints, Candidates};
 
     //Constructor

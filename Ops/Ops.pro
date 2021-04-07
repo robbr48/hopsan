@@ -55,7 +55,8 @@ SOURCES += \
     src/OpsWorkerDifferentialEvolution.cpp \
     src/OpsWorkerControlledRandomSearch.cpp \
     src/OpsWorkerComplexBurmen.cpp \
-    src/OpsWorkerGenetic.cpp
+    src/OpsWorkerGenetic.cpp \
+    src/OpsWorkerSimplexSwarm.cpp
 
 HEADERS += \
     include/OpsWorker.h \
@@ -71,7 +72,8 @@ HEADERS += \
     include/OpsWorkerComplexBurmen.h \
     include/OpsWorkerGenetic.h \
     include/OpsMessageHandler.h \
-    include/OpsWin32DLL.h
+    include/OpsWin32DLL.h \
+    include/OpsWorkerSimplexSwarm.h
 
 
 

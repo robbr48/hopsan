@@ -45,6 +45,7 @@
 #include "OpsWorkerControlledRandomSearch.h"
 #include "OpsWorkerComplexBurmen.h"
 #include "OpsWorkerGenetic.h"
+#include "OpsWorkerSimplexSwarm.h"
 #include "MessageHandler.h"
 #include "ModelHandler.h"
 #include "Widgets/ModelWidget.h"
@@ -428,6 +429,14 @@ void OptimizationHandler::setOptVar(const QString &var, const QString &value, bo
             }
             mpWorker = new Ops::WorkerGenetic(mpEvaluator, mpOpsMessageHandler);
         }
+        else if(value == "simplexswarm")
+        {
+            if(mpWorker)
+            {
+                delete mpWorker;
+            }
+            mpWorker = new Ops::WorkerSimplexSwarm(mpEvaluator, mpOpsMessageHandler);
+        }
         return;
     }
     else if(var == "evalid")
@@ -637,6 +646,18 @@ void OptimizationHandler::setOptVar(const QString &var, const QString &value, bo
         else if(var == "elites")
         {
             pWorker->setNumberOfElites(value.toInt());
+        }
+    }
+    else if(mpWorker->getAlgorithm() == Ops::SimplexSwarm)
+    {
+        Ops::WorkerSimplexSwarm *pWorker = dynamic_cast<Ops::WorkerSimplexSwarm*>(mpWorker);
+        if(var == "alphamin")
+        {
+            pWorker->setMinReflectionFactor(value.toDouble());
+        }
+        else if(var == "alphamax")
+        {
+            pWorker->setMaxReflectionFactor(value.toDouble());
         }
     }
 }
