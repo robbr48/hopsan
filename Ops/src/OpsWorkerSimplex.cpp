@@ -59,19 +59,27 @@ std::vector<double> WorkerSimplex::reflect(std::vector<double> point, std::vecto
     std::vector<double> newPoint;
     newPoint.resize(mNumParameters);
 
-    for(size_t j=0; j<mNumParameters; ++j)
-    {
-        //Reflect
-        newPoint[j] = center[j] + (center[j]-point[j])*alpha;
+    bool inside = true;
+    while(true) {
+        for(size_t j=0; j<mNumParameters; ++j)
+        {
+            //Reflect
+            newPoint[j] = center[j] + (center[j]-point[j])*alpha;
 
-        //Add some random noise
-        double maxDiff = getMaxPercentalParameterDiff();
-        double r = (double)rand() / (double)RAND_MAX;
-        newPoint[j] = newPoint[j] + mRandomFactor*(mParameterMax[j]-mParameterMin[j])*maxDiff*(r-0.5);
-        newPoint[j] = std::min(newPoint[j], mParameterMax[j]);
-        newPoint[j] = std::max(newPoint[j], mParameterMin[j]);
+            //Add some random noise
+            double maxDiff = getMaxPercentalParameterDiff();
+            double r = (double)rand() / (double)RAND_MAX;
+            newPoint[j] = newPoint[j] + mRandomFactor*(mParameterMax[j]-mParameterMin[j])*maxDiff*(r-0.5);
+            if(newPoint[j] > mParameterMax[j] || newPoint[j] < mParameterMin[j]) {
+                inside = false;
+            }
+        }
+        if(inside) {
+            break;
+        }
+        inside = true;
+        alpha = alpha*0.99;
     }
-
     return newPoint;
 }
 
