@@ -46,9 +46,24 @@ class TurbulentFlowFunction
 public:
     inline double getFlow(double c1, double c2, double Zc1, double Zc2) const
     {
+        double q;
+        if (c1 > c2)
+        {
+            q = mKs*(sqrt(c1-c2+(Zc1+Zc2)*(Zc1+Zc2)*mKs*mKs/4.0) - mKs*(Zc1+Zc2)/2.0);
+        }
+        else
+        {
+            q = mKs*(mKs*(Zc1+Zc2)/2.0 - sqrt(c2-c1+(Zc1+Zc2)*(Zc1+Zc2)*mKs*mKs/4.0));
+        }
+        return std::fmax(std::fmin(c1/Zc1,q),-c2/Zc2);
+    }
+
+    inline double getFlowOld(double c1, double c2, double Zc1, double Zc2) const
+    {
         if (c1 > c2)
         {
             return mKs*(sqrt(c1-c2+(Zc1+Zc2)*(Zc1+Zc2)*mKs*mKs/4.0) - mKs*(Zc1+Zc2)/2.0);
+
         }
         else
         {

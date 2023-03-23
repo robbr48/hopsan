@@ -177,10 +177,10 @@ namespace hopsan {
             mQTurb_at.setFlowCoefficient(Kcat);
             mQTurb_bt.setFlowCoefficient(Kcbt);
 
-            qpa = mQTurb_pa.getFlow(cp, ca, Zcp, Zca);
-            qpb = mQTurb_pb.getFlow(cp, cb, Zcp, Zcb);
-            qat = mQTurb_at.getFlow(ca, ct, Zca, Zct);
-            qbt = mQTurb_bt.getFlow(cb, ct, Zcb, Zct);
+            qpa = mQTurb_pa.getFlowOld(cp, ca, Zcp, Zca);
+            qpb = mQTurb_pb.getFlowOld(cp, cb, Zcp, Zcb);
+            qat = mQTurb_at.getFlowOld(ca, ct, Zca, Zct);
+            qbt = mQTurb_bt.getFlowOld(cb, ct, Zcb, Zct);
 
             qp = -qpa-qpb;
             qa = qpa-qat;

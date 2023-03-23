@@ -155,45 +155,45 @@ namespace hopsan {
             P2_p = P2_c + P2_q*P2_Zc;
 
             // Cavitation check
-            if(P1_p < 0.0)
-            {
-                P1_c = 0.0;
-                P1_Zc = 0;
-                cav = true;
-            }
-            if(P2_p < 0.0)
-            {
-                P2_c = 0.0;
-                P2_Zc = 0;
-                cav = true;
-            }
+//            if(P1_p < 0.0)
+//            {
+//                P1_c = 0.0;
+//                P1_Zc = 0;
+//                cav = true;
+//            }
+//            if(P2_p < 0.0)
+//            {
+//                P2_c = 0.0;
+//                P2_Zc = 0;
+//                cav = true;
+//            }
 
-            if(cav)
-            {
+//            if(cav)
+//            {
            
-                if(outnom>0.5)
-                {
-                    qTurb.setFlowCoefficient(Kv_open);
-                    P2_q = qTurb.getFlow(P1_c, P2_c, P1_Zc, P2_Zc);
-                }
-                else
-                {
-                    qTurb.setFlowCoefficient(Kv_check);
-                    if(P1_c > P2_c+F_s)
-                    {
-                        P2_q = qTurb.getFlow(P1_c, P2_c, P1_Zc, P2_Zc);
-                    }
-                    else
-                    {
-                        P2_q = 0.0;
-                    }
-                }
+//                if(outnom>0.5)
+//                {
+//                    qTurb.setFlowCoefficient(Kv_open);
+//                    P2_q = qTurb.getFlow(P1_c, P2_c, P1_Zc, P2_Zc);
+//                }
+//                else
+//                {
+//                    qTurb.setFlowCoefficient(Kv_check);
+//                    if(P1_c > P2_c+F_s)
+//                    {
+//                        P2_q = qTurb.getFlow(P1_c, P2_c, P1_Zc, P2_Zc);
+//                    }
+//                    else
+//                    {
+//                        P2_q = 0.0;
+//                    }
+//                }
 
-                P1_q = -P2_q;
+//                P1_q = -P2_q;
 
-                P1_p = P1_c + P1_q*P1_Zc;
-                P2_p = P2_c + P2_q*P2_Zc;
-            }
+//                P1_p = P1_c + P1_q*P1_Zc;
+//                P2_p = P2_c + P2_q*P2_Zc;
+//            }
 
             //Write new values to nodes
             (*mpP1_q) = P1_q;
