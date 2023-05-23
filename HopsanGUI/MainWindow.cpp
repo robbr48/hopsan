@@ -779,6 +779,10 @@ void MainWindow::createActions()
     mHelpPopupTextMap.insert(mpImportFMUAction, "Import Functional Mock-up Unit (FMU).");
     connect(mpImportFMUAction, SIGNAL(hovered()), this, SLOT(showToolBarHelpPopup()));
 
+    mpImportFromPaceLabAction = new QAction(QIcon(QString(ICONPATH) + "svg/Hopsan-Import.svg"), tr("Import Model From PaceLab"), this);
+    mHelpPopupTextMap.insert(mpImportFromPaceLabAction, "Import Model From PaceLab.");
+    connect(mpImportFromPaceLabAction, SIGNAL(hovered()), this, SLOT(showToolBarHelpPopup()));
+
     mpImportDataFileAction = new QAction(tr("Import data file"), this);
     mHelpPopupTextMap.insert(mpImportDataFileAction, "Import (PLO or CSV) data file.");
     connect(mpImportDataFileAction, SIGNAL(hovered()), this, SLOT(showToolBarHelpPopup()));
@@ -1066,6 +1070,7 @@ void MainWindow::createMenus()
     mpImportMenu->addAction(mpLoadModelParametersFromSsvAction);
     mpImportMenu->addSeparator();
     mpImportMenu->addAction(mpImportFMUAction);
+    mpImportMenu->addAction(mpImportFromPaceLabAction);
 
     mpExportMenu->addAction(mpExportSimulationStateAction);
     mpExportMenu->addMenu(mpExportModelParametersMenu);
@@ -1233,6 +1238,7 @@ void MainWindow::createToolbars()
     mpToolsToolBar->addAction(mpFlipVerticalAction);
 
     connect(mpImportFMUAction,                  SIGNAL(triggered()), gpLibraryHandler,  SLOT(importFmu()));
+    connect(mpImportFromPaceLabAction,          SIGNAL(triggered()), mpModelHandler,    SLOT(importModelFromPaceLab()));
     connect(mpExportToSimulinkAction,           SIGNAL(triggered()), mpModelHandler,    SLOT(exportCurrentModelToSimulink()));
     connect(mpExportToFMU1_32Action,            SIGNAL(triggered()), mpModelHandler,    SLOT(exportCurrentModelToFMU1_32()));
     connect(mpExportToFMU1_64Action,            SIGNAL(triggered()), mpModelHandler,    SLOT(exportCurrentModelToFMU1_64()));

@@ -188,6 +188,7 @@ RC_FILE = HOPSANGUI.rc
 SOURCES += main.cpp \
     BuiltinTests.cpp \
     MainWindow.cpp \
+    Utilities/PaceLabImporter.cpp \
     Widgets/ProjectTabWidget.cpp \
     GUIConnector.cpp \
     GUIPort.cpp \
@@ -272,6 +273,7 @@ SOURCES += main.cpp \
 
 HEADERS += MainWindow.h \
     BuiltinTests.h \
+    Utilities/PaceLabImporter.h \
     Widgets/ProjectTabWidget.h \
     GUIConnector.h \
     GUIPort.h \

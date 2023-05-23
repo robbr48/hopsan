@@ -1311,6 +1311,8 @@ void Configuration::registerSettings()
     mStringSettings.insert(CFG_CUSTOMTEMPPATH, "");
     mStringSettings.insert(CFG_GCC64DIR, "");
     mStringSettings.insert(CFG_GCC32DIR, "");
+    mStringSettings.insert(CFG_PACELABIMPORTDIR, gpDesktopHandler->getDocumentsPath());
+
 #ifndef _WIN32
 #ifdef HOPSANCOMPILED64BIT
     mStringSettings.insert(CFG_GCC64DIR, "/usr/bin");

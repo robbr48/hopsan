@@ -40,6 +40,7 @@
 #include "global.h"
 #include "Configuration.h"
 #include "DesktopHandler.h"
+#include "GeneratorUtils.h"
 #include "GraphicsView.h"
 #include "GraphicsViewPort.h"
 #include "GUIObjects/GUIContainerObject.h"
@@ -58,6 +59,7 @@
 #include "Widgets/PlotWidget2.h"
 #include "Widgets/TextEditorWidget.h"
 #include "Utilities/GUIUtilities.h"
+#include "Utilities/PaceLabImporter.h"
 
 #ifdef USEZMQ
 #include "RemoteSimulationUtils.h"
@@ -931,6 +933,34 @@ void ModelHandler::exportCurrentModelToExe_32()
 void ModelHandler::exportCurrentModelToExe_64()
 {
     qobject_cast<SystemObject*>(getCurrentViewContainerObject())->exportToExecutableModel("", ArchitectureEnumT::x64);
+}
+
+void ModelHandler::importModelFromPaceLab()
+{
+    auto spGenerator = createDefaultImportGenerator();
+    QString componentsFile = QFileDialog::getOpenFileName(gpMainWindowWidget,
+                                                          "Select Components File",
+                                                          gpConfig->getStringSetting(CFG_PACELABIMPORTDIR),
+                                                          "Comma-separated values (*.csv)");
+    if(componentsFile.isEmpty()) {
+        return;
+    }
+    gpConfig->setStringSetting(CFG_PACELABIMPORTDIR, QFileInfo(componentsFile).absolutePath());
+    QString connectionsFile = QFileDialog::getOpenFileName(gpMainWindowWidget,
+                                                           "Select Connections File",
+                                                           gpConfig->getStringSetting(CFG_PACELABIMPORTDIR),
+                                                           "Comma-separated values (*.csv)");
+    if(connectionsFile.isEmpty()) {
+        return;
+    }
+    gpConfig->setStringSetting(CFG_PACELABIMPORTDIR, QFileInfo(connectionsFile).absolutePath());
+
+    QFileInfo componentsFileInfo(componentsFile);
+    QString targetFile = componentsFileInfo.path() + "/" + componentsFileInfo.completeBaseName() + ".hmf";
+    //spGenerator->generateFromPaceLab(componentsFile, connectionsFile, targetFile);
+    PaceLabImporter importer(componentsFile, connectionsFile);
+    ModelWidget *pModel = this->addNewModel();
+    importer.populateModel(pModel);
 }
 
 void ModelHandler::showLosses(bool show)

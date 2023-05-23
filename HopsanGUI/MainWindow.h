@@ -154,6 +154,7 @@ public:
     QAction *mpExportModelParametersActionToSsv;
     QAction *mpExportModelParametersActionToHpf;
     QAction *mpImportFMUAction;
+    QAction *mpImportFromPaceLabAction;
     QAction *mpImportDataFileAction;
     QAction *mpExportToSimulinkAction;
     QAction *mpExportToFMU1_32Action;

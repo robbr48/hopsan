@@ -128,6 +128,8 @@ public slots:
     void exportCurrentModelToExe_32();
     void exportCurrentModelToExe_64();
 
+    void importModelFromPaceLab();
+
     void showLosses(bool show);
     void measureSimulationTime();
     void launchDebugger();
