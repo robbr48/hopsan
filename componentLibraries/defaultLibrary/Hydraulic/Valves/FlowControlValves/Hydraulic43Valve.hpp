@@ -53,14 +53,15 @@ namespace hopsan {
         TurbulentFlowFunction mQTurb_bt;
 
         // Port and node data pointers
-        Port *mpPP, *mpPT, *mpPA, *mpPB, *mpIn, *mpOut;
-        double *mpPP_p, *mpPP_q, *mpPT_p, *mpPT_q, *mpPA_p, *mpPA_q, *mpPB_p, *mpPB_q;
-        double *mpPP_c, *mpPP_Zc, *mpPT_c, *mpPT_Zc, *mpPA_c, *mpPA_Zc, *mpPB_c, *mpPB_Zc;
+        Port *mpPP, *mpPT, *mpPA, *mpPB;
+        double *mpPP_p, *mpPP_q, *mpPP_Qdot, *mpPT_p, *mpPT_q, *mpPT_Qdot, *mpPA_p, *mpPA_q, *mpPA_Qdot, *mpPB_p, *mpPB_q, *mpPB_Qdot;
+        double *mpPP_c, *mpPP_Zc, *mpPP_T, *mpPT_c, *mpPT_Zc, *mpPT_T, *mpPA_c, *mpPA_Zc, *mpPA_T, *mpPB_c, *mpPB_Zc, *mpPB_T;
 
         double *mpXvIn, *mpXv, *mpCq, *mpD, *mpF_pa, *mpF_pb, *mpF_at, *mpF_bt, *mpXvmax, *mpRho, *mpX_pa, *mpX_pb, *mpX_at, *mpX_bt;
 
         // Constants
         double mOmegah, mDeltah;
+        double mrho, mcp;
 
     public:
         static Component *Creator()
@@ -93,6 +94,8 @@ namespace hopsan {
 
             addConstant("omega_h", "Resonance frequency", "Frequency", 100.0, mOmegah);
             addConstant("delta_h", "Damping factor", "-", 1.0, mDeltah);
+            addConstant("rho", "Density", "kg/m^3", 880, mrho);
+            addConstant("cp", "Specific heat capacity", "J/kgK", 1670, mcp);
         }
 
 
@@ -100,23 +103,31 @@ namespace hopsan {
         {
             mpPP_p = getSafeNodeDataPtr(mpPP, NodeHydraulic::Pressure);
             mpPP_q = getSafeNodeDataPtr(mpPP, NodeHydraulic::Flow);
+            mpPP_Qdot = getSafeNodeDataPtr(mpPP, NodeHydraulic::HeatFlow);
             mpPP_c = getSafeNodeDataPtr(mpPP, NodeHydraulic::WaveVariable);
             mpPP_Zc = getSafeNodeDataPtr(mpPP, NodeHydraulic::CharImpedance);
+            mpPP_T = getSafeNodeDataPtr(mpPP, NodeHydraulic::Temperature);
 
             mpPT_p = getSafeNodeDataPtr(mpPT, NodeHydraulic::Pressure);
             mpPT_q = getSafeNodeDataPtr(mpPT, NodeHydraulic::Flow);
+            mpPT_Qdot = getSafeNodeDataPtr(mpPT, NodeHydraulic::HeatFlow);
             mpPT_c = getSafeNodeDataPtr(mpPT, NodeHydraulic::WaveVariable);
             mpPT_Zc = getSafeNodeDataPtr(mpPT, NodeHydraulic::CharImpedance);
+            mpPT_T = getSafeNodeDataPtr(mpPT, NodeHydraulic::Temperature);
 
             mpPA_p = getSafeNodeDataPtr(mpPA, NodeHydraulic::Pressure);
             mpPA_q = getSafeNodeDataPtr(mpPA, NodeHydraulic::Flow);
+            mpPA_Qdot = getSafeNodeDataPtr(mpPA, NodeHydraulic::HeatFlow);
             mpPA_c = getSafeNodeDataPtr(mpPA, NodeHydraulic::WaveVariable);
             mpPA_Zc = getSafeNodeDataPtr(mpPA, NodeHydraulic::CharImpedance);
+            mpPA_T = getSafeNodeDataPtr(mpPA, NodeHydraulic::Temperature);
 
             mpPB_p = getSafeNodeDataPtr(mpPB, NodeHydraulic::Pressure);
             mpPB_q = getSafeNodeDataPtr(mpPB, NodeHydraulic::Flow);
+            mpPB_Qdot = getSafeNodeDataPtr(mpPB, NodeHydraulic::HeatFlow);
             mpPB_c = getSafeNodeDataPtr(mpPB, NodeHydraulic::WaveVariable);
             mpPB_Zc = getSafeNodeDataPtr(mpPB, NodeHydraulic::CharImpedance);
+            mpPB_T = getSafeNodeDataPtr(mpPB, NodeHydraulic::Temperature);
 
             double num[3] = {1.0, 0.0, 0.0};
             double den[3] = {1.0, 2.0*mDeltah/mOmegah, 1.0/(mOmegah*mOmegah)};
@@ -128,19 +139,25 @@ namespace hopsan {
         void simulateOneTimestep()
         {
             //Declare local variables
-            double cp, Zcp, ct, Zct, ca, Zca, cb, Zcb, xvin, xv, xpanom, xpbnom, xatnom, xbtnom, Kcpa, Kcpb, Kcat, Kcbt, qpa, qpb, qat, qbt, qp, qa, qb, qt, pa, pb, pt, pp;
+            double cp, Zcp, Tp, ct, Zct, Tt, ca, Zca, Ta, cb, Zcb, Tb;
+            double xvin, xv, xpanom, xpbnom, xatnom, xbtnom, Kcpa, Kcpb, Kcat, Kcbt;
+            double qpa, qpb, qat, qbt, qp, qa, qb, qt, pa, pb, pt, pp, Qdotp, Qdott, Qdota, Qdotb;
             double Cq, rho, xvmax, d, f_pa, f_pb, f_at, f_bt, x_pa, x_pb, x_at, x_bt;
             bool cav = false;
 
             //Get variable values from nodes
             cp = (*mpPP_c);
             Zcp = (*mpPP_Zc);
+            Tp = (*mpPP_T);
             ct  = (*mpPT_c);
             Zct = (*mpPT_Zc);
+            Tt = (*mpPT_T);
             ca  = (*mpPA_c);
             Zca = (*mpPA_Zc);
+            Ta = (*mpPA_T);
             cb  = (*mpPB_c);
             Zcb = (*mpPB_Zc);
+            Tb = (*mpPB_T);
 
             xvin  = (*mpXvIn);
             Cq = (*mpCq);
@@ -236,16 +253,57 @@ namespace hopsan {
                 pb = cb + qb*Zcb;
             }
 
+            Qdotp = 0;
+            Qdott = 0;
+            Qdota = 0;
+            Qdotb = 0;
+            if(qpa > 0) {
+                Qdotp += -qpa*mrho*mcp*Tp;
+                Qdota += (pp-pa)*qpa + qpa*mrho*mcp*Tp;
+            }
+            else {
+                Qdota += qpa*mrho*mcp*Ta;
+                Qdotp += (pa-pp)*qpa - qpa*mrho*mcp*Ta;
+            }
+            if(qpb > 0) {
+                Qdotp += -qpb*mrho*mcp*Tp;
+                Qdotb += (pp-pb)*qpb + qpb*mrho*mcp*Tp;
+            }
+            else {
+                Qdotb += qpb*mrho*mcp*Tb;
+                Qdotp += (pb-pp)*qpb - qpb*mrho*mcp*Tb;
+            }
+            if(qat > 0) {
+                Qdota += -qat*mrho*mcp*Ta;
+                Qdott += (pa-pt)*qat + qat*mrho*mcp*Ta;
+            }
+            else {
+                Qdott += qat*mrho*mcp*Tt;
+                Qdott += (pt-pa)*qat - qat*mrho*mcp*Tt;
+            }
+            if(qbt > 0) {
+                Qdotb += -qbt*mrho*mcp*Tb;
+                Qdott += (pb-pt)*qbt + qbt*mrho*mcp*Tb;
+            }
+            else {
+                Qdota += qpa*mrho*mcp*Ta;
+                Qdotb += (pt-pb)*qbt - qpa*mrho*mcp*Ta;
+            }
+
             //Write new values to nodes
 
             (*mpPP_p) = cp + qp*Zcp;
             (*mpPP_q) = qp;
+            (*mpPP_Qdot) = Qdotp;
             (*mpPT_p) = ct + qt*Zct;
             (*mpPT_q) = qt;
+            (*mpPT_Qdot) = Qdott;
             (*mpPA_p) = ca + qa*Zca;
             (*mpPA_q) = qa;
+            (*mpPA_Qdot) = Qdota;
             (*mpPB_p) = cb + qb*Zcb;
             (*mpPB_q) = qb;
+            (*mpPB_Qdot) = Qdotb;
             (*mpXv) = xv;
         }
     };

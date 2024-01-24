@@ -35,6 +35,7 @@
 #define HYDRAULICVOLUME_HPP_INCLUDED
 
 #include "ComponentEssentials.h"
+#include "ComponentUtilities/Integrator.h"
 
 namespace hopsan {
 
@@ -50,11 +51,17 @@ namespace hopsan {
         double mV;
         double mBetae;
         double mPh;
+        double mrho;
+        double mcp;
 
         Port *mpP1, *mpP2;
-        double *mpP1_p, *mpP1_q, *mpP1_c, *mpP1_Zc;
-        double *mpP2_p, *mpP2_q, *mpP2_c, *mpP2_Zc;
+        double *mpP1_p, *mpP1_q, *mpP1_Qdot, *mpP1_T, *mpP1_c, *mpP1_Zc;
+        double *mpP2_p, *mpP2_q, *mpP2_Qdot, *mpP2_T, *mpP2_c, *mpP2_Zc;
         double *mpAlpha;
+
+        double T, Q;
+
+        Integrator mTempIntegrator;
 
     public:
         static Component *Creator()
@@ -72,6 +79,8 @@ namespace hopsan {
             addConstant("V", "Volume", "m^3", 1.0e-3, mV);
             addConstant("Beta_e", "Bulkmodulus", "Pa", 1.0e9, mBetae);
             addConstant("P_high", "High pressure (for animation)", "Pa", 2e7, mPh);
+            addConstant("rho", "Oil density", "kg/m^3", 880, mrho);
+            addConstant("cp", "Specific heat capacity", "J/kgK", 1670, mcp);
 
             setDefaultStartValue(mpP1, NodeHydraulic::Flow, 0.0);
             setDefaultStartValue(mpP1, NodeHydraulic::Pressure, 1.0e5);
@@ -89,13 +98,17 @@ namespace hopsan {
         {
             mpP1_p = getSafeNodeDataPtr(mpP1, NodeHydraulic::Pressure);
             mpP1_q = getSafeNodeDataPtr(mpP1, NodeHydraulic::Flow);
+            mpP1_Qdot = getSafeNodeDataPtr(mpP1, NodeHydraulic::HeatFlow);
             mpP1_c = getSafeNodeDataPtr(mpP1, NodeHydraulic::WaveVariable);
             mpP1_Zc = getSafeNodeDataPtr(mpP1, NodeHydraulic::CharImpedance);
+            mpP1_T = getSafeNodeDataPtr(mpP1, NodeHydraulic::Temperature);
 
             mpP2_p = getSafeNodeDataPtr(mpP2, NodeHydraulic::Pressure);
             mpP2_q = getSafeNodeDataPtr(mpP2, NodeHydraulic::Flow);
+            mpP2_Qdot = getSafeNodeDataPtr(mpP2, NodeHydraulic::HeatFlow);
             mpP2_c = getSafeNodeDataPtr(mpP2, NodeHydraulic::WaveVariable);
             mpP2_Zc = getSafeNodeDataPtr(mpP2, NodeHydraulic::CharImpedance);
+            mpP2_T = getSafeNodeDataPtr(mpP2, NodeHydraulic::Temperature);
 
             double alpha = (*mpAlpha);
             mZc = mBetae/mV*mTimestep/(1.0-alpha); //Need to be updated at simulation start since it is volume and bulk that are set.
@@ -105,19 +118,26 @@ namespace hopsan {
             (*mpP1_Zc) = mZc;
             (*mpP2_c) = getDefaultStartValue(mpP1,NodeHydraulic::Pressure)+mZc*getDefaultStartValue(mpP1,NodeHydraulic::Flow);
             (*mpP2_Zc) = mZc;
+
+            T=(*mpP1_T);
+            Q = mV*mrho*mcp*T;
+
+            mTempIntegrator.initialize(mTimestep, T, T);
         }
 
 
         void simulateOneTimestep()
         {
             //Declare local variables
-            double q1, c1, q2, c2, c10, c20, alpha;
+            double q1, c1, q2, c2, Qdot1, Qdot2, c10, c20, alpha, dQ, dT;
 
             //Get variable values from nodes
             q1 = (*mpP1_q);
             q2 = (*mpP2_q);
             c1 = (*mpP1_c);
             c2 = (*mpP2_c);
+            Qdot1 = (*mpP1_Qdot);
+            Qdot2 = (*mpP2_Qdot);
             alpha = (*mpAlpha);
 
             //Volume equations
@@ -127,11 +147,17 @@ namespace hopsan {
             c1 = alpha*c1 + (1.0-alpha)*c10;
             c2 = alpha*c2 + (1.0-alpha)*c20;
 
+            dQ = (Qdot1+Qdot2);
+            dT = dQ/(mV*mrho*mcp);
+            T = mTempIntegrator.update(dT);
+
             //Write new values to nodes
             (*mpP1_c) = c1;
             (*mpP1_Zc) = mZc;
+            (*mpP1_T) = T;
             (*mpP2_c) = c2;
             (*mpP2_Zc) = mZc;
+            (*mpP2_T) = T;
         }
 
         void finalize()

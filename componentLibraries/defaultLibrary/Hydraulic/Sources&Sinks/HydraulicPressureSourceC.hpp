@@ -46,7 +46,7 @@ namespace hopsan {
     {
     private:
         Port *mpP1;
-        double *mpP, *mpP1_p, *mpP1_c, *mpP1_Zc;
+        double *mpP, *mpT, *mpP1_p, *mpP1_T, *mpP1_c, *mpP1_Zc;
 
     public:
         static Component *Creator()
@@ -57,9 +57,11 @@ namespace hopsan {
         void configure()
         {
             addInputVariable("p", "Set pressure", "Pa", 1.0e5, &mpP);
+            addInputVariable("T", "Set temperature", "K", 293, &mpT);
 
             mpP1 = addPowerPort("P1", "NodeHydraulic");
             disableStartValue(mpP1, NodeHydraulic::Pressure);
+            disableStartValue(mpP1, NodeHydraulic::Temperature);
             disableStartValue(mpP1, NodeHydraulic::WaveVariable);
             disableStartValue(mpP1, NodeHydraulic::CharImpedance);
             setDefaultStartValue(mpP1, NodeHydraulic::Flow, 0.0);
@@ -71,6 +73,7 @@ namespace hopsan {
             mpP1_p = getSafeNodeDataPtr(mpP1, NodeHydraulic::Pressure);
             mpP1_c = getSafeNodeDataPtr(mpP1, NodeHydraulic::WaveVariable);
             mpP1_Zc = getSafeNodeDataPtr(mpP1, NodeHydraulic::CharImpedance);
+            mpP1_T = getSafeNodeDataPtr(mpP1, NodeHydraulic::Temperature);
 
             (*mpP1_p) = (*mpP);
             simulateOneTimestep();
@@ -79,6 +82,7 @@ namespace hopsan {
 
         void simulateOneTimestep()
         {
+            *mpP1_T = *mpT;
             *mpP1_c = *mpP;
             *mpP1_Zc = 0.0;
         }

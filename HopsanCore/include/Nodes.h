@@ -192,10 +192,10 @@ private:
         setNiceName("hydraulic");
         setDataCharacteristics(Flow, "Flow", "q", "Flow", FlowType);
         setDataCharacteristics(Pressure, "Pressure", "p", "Pressure", IntensityType);
-        setDataCharacteristics(Temperature, "Temperature", "T", "K", HiddenType);
+        setDataCharacteristics(Temperature, "Temperature", "T", "K", DefaultType);
         setDataCharacteristics(WaveVariable, "WaveVariable", "c", "Pressure", TLMType);
         setDataCharacteristics(CharImpedance, "CharImpedance", "Zc", "Pa s/m^3", TLMType);
-        setDataCharacteristics(HeatFlow, "HeatFlow", "Qdot", "?", HiddenType);
+        setDataCharacteristics(HeatFlow, "HeatFlow", "Qdot", "J/s", DefaultType);
 
         // Set default initial startvales to reasonable (non-zero) values
         mDataValues[Pressure] = 100000;

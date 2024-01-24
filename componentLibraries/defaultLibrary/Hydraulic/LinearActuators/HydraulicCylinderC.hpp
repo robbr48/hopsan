@@ -59,8 +59,8 @@ class HydraulicCylinderC : public ComponentC
         double mDen[2];
 
         //Node data pointers
-        std::vector<double*> mvpP1_p, mvpP1_q, mvpP1_c, mvpP1_Zc;
-        std::vector<double*> mvpP2_p, mvpP2_q, mvpP2_c, mvpP2_Zc;
+        std::vector<double*> mvpP1_p, mvpP1_q, mvpP1_Qdot, mvpP1_c, mvpP1_Zc, mvpP1_T;
+        std::vector<double*> mvpP2_p, mvpP2_q, mvpP2_Qdot, mvpP2_c, mvpP2_Zc, mvpP2_T;
         double *mpSl, *mpV01, *mpV02, *mpBp, *mpBetae, *mpCLeak;
 
         double *mpP3_f, *mpP3_x, *mpP3_v, *mpP3_c, *mpP3_Zx, *mpP3_me;
@@ -70,6 +70,18 @@ class HydraulicCylinderC : public ComponentC
 
         //Ports
         Port *mpP1, *mpP2, *mpP3;
+
+        double mrho;
+        double mcp;
+        double T1, T2;
+
+        double mTempNum1[2];
+        double mTempDen1[2];
+        double mTempNum2[2];
+        double mTempDen2[2];
+
+        FirstOrderTransferFunction mTempFilter1;
+        FirstOrderTransferFunction mTempFilter2;
 
     protected:
         double *mpA1, *mpA2;
@@ -88,6 +100,8 @@ class HydraulicCylinderC : public ComponentC
 
             // Add constant parameters
             addConstant("use_sl", "Use end stops (stroke limitation)", "", true, mUseEndStops);
+            addConstant("rho", "Oil density", "kg/m^3", 880, mrho);
+            addConstant("cp", "Specific heat capacity", "J/kgK", 1670, mcp);
 
             // Add ports to the component
             mpP1 = addPowerMultiPort("P1", "NodeHydraulic");
@@ -115,13 +129,17 @@ class HydraulicCylinderC : public ComponentC
 
             mvpP1_p.resize(mNumPorts1);
             mvpP1_q.resize(mNumPorts1);
+            mvpP1_Qdot.resize(mNumPorts1);
             mvpP1_c.resize(mNumPorts1);
             mvpP1_Zc.resize(mNumPorts1);
+            mvpP1_T.resize(mNumPorts1);
 
             mvpP2_p.resize(mNumPorts2);
             mvpP2_q.resize(mNumPorts2);
+            mvpP2_Qdot.resize(mNumPorts2);
             mvpP2_c.resize(mNumPorts2);
             mvpP2_Zc.resize(mNumPorts2);
+            mvpP2_T.resize(mNumPorts2);
 
             double A1 = (*mpA1);
             double A2 = (*mpA2);
@@ -138,23 +156,29 @@ class HydraulicCylinderC : public ComponentC
 
                 mvpP1_p[i] = getSafeMultiPortNodeDataPtr(mpP1, i, NodeHydraulic::Pressure, 0.0);
                 mvpP1_q[i] = getSafeMultiPortNodeDataPtr(mpP1, i, NodeHydraulic::Flow, 0.0);
+                mvpP1_Qdot[i]  = getSafeMultiPortNodeDataPtr(mpP1, i, NodeHydraulic::HeatFlow, 0.0);
                 mvpP1_c[i] = getSafeMultiPortNodeDataPtr(mpP1, i, NodeHydraulic::WaveVariable, 0.0);
                 mvpP1_Zc[i] = getSafeMultiPortNodeDataPtr(mpP1, i, NodeHydraulic::CharImpedance, 0.0);
+                mvpP1_T[i]  = getSafeMultiPortNodeDataPtr(mpP1, i, NodeHydraulic::Temperature, 0.0);
 
                 *mvpP1_p[i] = getDefaultStartValue(mpP1, NodeHydraulic::Pressure);
                 *mvpP1_q[i] = getDefaultStartValue(mpP1, NodeHydraulic::Flow)/double(mNumPorts1);
                 *mvpP1_c[i] = getDefaultStartValue(mpP1, NodeHydraulic::Pressure);
+                *mvpP1_T[i]  = getDefaultStartValue(mpP1, NodeHydraulic::Temperature, i);
             }
             for (size_t i=0; i<mNumPorts2; ++i)
             {
                 mvpP2_p[i] = getSafeMultiPortNodeDataPtr(mpP2, i, NodeHydraulic::Pressure, 0.0);
                 mvpP2_q[i] = getSafeMultiPortNodeDataPtr(mpP2, i, NodeHydraulic::Flow, 0.0);
+                mvpP2_Qdot[i]  = getSafeMultiPortNodeDataPtr(mpP2, i, NodeHydraulic::HeatFlow, 0.0);
                 mvpP2_c[i] = getSafeMultiPortNodeDataPtr(mpP2, i, NodeHydraulic::WaveVariable, 0.0);
                 mvpP2_Zc[i] = getSafeMultiPortNodeDataPtr(mpP2, i, NodeHydraulic::CharImpedance, 0.0);
+                mvpP2_T[i]  = getSafeMultiPortNodeDataPtr(mpP2, i, NodeHydraulic::Temperature, 0.0);
 
                 *mvpP2_p[i] = getDefaultStartValue(mpP2, NodeHydraulic::Pressure);
                 *mvpP2_q[i] = getDefaultStartValue(mpP2, NodeHydraulic::Flow)/double(mNumPorts2);
                 *mvpP2_c[i] = getDefaultStartValue(mpP2, NodeHydraulic::Pressure);
+                *mvpP2_T[i]  = getDefaultStartValue(mpP2, NodeHydraulic::Temperature, i);
             }
             mpP3_f = getSafeNodeDataPtr(mpP3, NodeMechanic::Force);
             mpP3_x = getSafeNodeDataPtr(mpP3, NodeMechanic::Position);
@@ -214,6 +238,24 @@ class HydraulicCylinderC : public ComponentC
             }
             (*mpP3_c) = c3;
             (*mpP3_Zx) = Zx3;
+
+            if(mNumPorts1>0) {
+                T1 = (*mvpP1_T[0]);
+            }
+            if(mNumPorts2>0) {
+                T2 = (*mvpP2_T[0]);
+            }
+
+            mTempNum1[0] = 1.0/mrho/mcp;
+            mTempNum1[1] = 0;
+            mTempDen1[0] = 0;
+            mTempDen1[1] = V1;
+            mTempNum2[0] = 1.0/mrho/mcp;
+            mTempNum2[1] = 0;
+            mTempDen2[0] = 0;
+            mTempDen2[1] = V2;
+            mTempFilter1.initialize(mTimestep, mTempNum1, mTempDen1, 0, T1);
+            mTempFilter2.initialize(mTimestep, mTempNum2, mTempDen2, 0, T2);
         }
 
         void simulateOneTimestep()
@@ -332,17 +374,78 @@ class HydraulicCylinderC : public ComponentC
             double c3 = A1*ci1m - A2*ci2m + CxLim;
             double Zx3 = A1*A1*Zc1m + A2*A2*Zc2m + bp + ZxLim;
 
+            //Compute temperatures
+            double dQ1 = 0;
+            double dQ2 = 0;
+            for (size_t i=0; i<mNumPorts1; ++i) {
+                dQ1 += (*mvpP1_Qdot[i]);
+            }
+            for (size_t i=0; i<mNumPorts2; ++i) {
+                dQ2 += (*mvpP2_Qdot[i]);
+            }
+            if(qLeak>0) {
+                dQ1 -= qLeak*mrho*mcp*T1;
+                dQ2 += (c1mean-c2mean)*qLeak + qLeak*mrho*mcp*T1;
+            }
+            else {
+                dQ2 -= qLeak*mrho*mcp*T2;
+                dQ1 += (c2mean-c1mean)*qLeak + qLeak*mrho*mcp*T2;
+            }
+            dQ1 += bp*fabs(v3)/2.0;
+            dQ2 += bp*fabs(v3)/2.0;
+            //dQ1 *= mTimestep;
+            //dQ2 *= mTimestep;
+            double dV1 = -v3*A1;
+            double dV2 = v3*A2;
+            double dT1 = (dQ1-dV1*mrho*mcp*T1)/(V1*mrho*mcp);
+            double dT2 = (dQ2-dV2*mrho*mcp*T2)/(V2*mrho*mcp);
+                        //T = dQ/rho/cp/(dV+V*s)
+            mTempDen1[0] = dV1;
+            mTempDen1[1] = V1;
+            mTempFilter1.setDen(mTempDen1);
+            T1 = mTempFilter1.update(dQ1);
+            mTempDen2[0] = dV2;
+            mTempDen2[1] = V2;
+            mTempFilter2.setDen(mTempDen2);
+            T2 = mTempFilter2.update(dQ2);
+            //T1 = T1 + mTimestep*dT1;
+            //T2 = T2 + mTimestep*dT2;
+            addDebugMessage("dQ1: "+to_hstring(dQ1));
+            addDebugMessage("dV1: "+to_hstring(dV1));
+
+            addDebugMessage("dQ2: "+to_hstring(dQ2));
+            addDebugMessage("dV2: "+to_hstring(dV2)+"\n");
+
+
+            //Q = V*rho*cp*T
+            //dQ = dV*rho*cp*T + V*rho*cp*dT
+            //dT = (dQ - dV*rho*cp*T)/(V*rho*cp)
+
+            //dQ = dV*rho*cp*T + V*rho*cp*T*s = T*(dV*rho*cp + V*rho*cp*s) = T*rho*cp*(dV + V*s)
+            //T = dQ/rho/cp/(dV+V*s)
+
+
+
+            //Q = m*cp*T
+            //dQ = m*cp*dT + dm*cp*T
+            //dT = (dQ-dm*cp*T)/(m*cp)
+            //dm = dV*rho
+            //dT = (dQ1-dV1*mrho*cp*T)/(V1*mrho*cp)
+
+            //J/s = kg*J/kg/K*K/s
 
             //Write to nodes
             for(size_t i=0; i<mNumPorts1; ++i)
             {
                 *(mvpP1_c[i]) = mAlpha * (*mvpP1_c[i]) + (1.0 - mAlpha)*(c1mean*2 - (*mvpP1_c[i]) - 2*Zc1*(*mvpP1_q[i]));
                 *(mvpP1_Zc[i]) = Zc1;
+                (*mvpP1_T[i]) = T1;
             }
             for(size_t i=0; i<mNumPorts2; ++i)
             {
                 *(mvpP2_c[i]) = mAlpha * (*mvpP2_c[i]) + (1.0 - mAlpha)*(c2mean*2 - (*mvpP2_c[i]) - 2*Zc2*(*mvpP2_q[i]));
                 *(mvpP2_Zc[i]) = Zc2;
+                (*mvpP2_T[i]) = T2;
             }
             (*mpP3_c) = c3;
             (*mpP3_Zx) = Zx3;

@@ -47,9 +47,10 @@ namespace hopsan {
     class HydraulicFixedDisplacementPump : public ComponentQ
     {
     private:
-        double *mpND_p1, *mpND_q1, *mpND_c1, *mpND_Zc1, *mpND_p2, *mpND_q2, *mpND_c2, *mpND_Zc2, *mpND_a;
+        double *mpND_p1, *mpND_q1, *mpND_Qdot1, *mpND_c1, *mpND_Zc1, *mpND_T1, *mpND_p2, *mpND_q2, *mpND_Qdot2, *mpND_c2, *mpND_Zc2, *mpND_T2, *mpND_a;
         double *mpN, *mpDp, *mpClp;
         Port *mpP1, *mpP2;
+        double rho, cp;
 
     public:
         static Component *Creator()
@@ -59,6 +60,9 @@ namespace hopsan {
 
         void configure()
         {
+            addConstant("rho", "Density", "kg/m^3", 880, rho);
+            addConstant("cp", "Specific heat capacity", "J/kgK", 1670, cp);
+
             mpP1 = addPowerPort("P1", "NodeHydraulic");
             mpP2 = addPowerPort("P2", "NodeHydraulic");
 
@@ -73,13 +77,17 @@ namespace hopsan {
         {
             mpND_p1 = getSafeNodeDataPtr(mpP1, NodeHydraulic::Pressure);
             mpND_q1 = getSafeNodeDataPtr(mpP1, NodeHydraulic::Flow);
+            mpND_Qdot1 = getSafeNodeDataPtr(mpP1, NodeHydraulic::HeatFlow);
             mpND_c1 = getSafeNodeDataPtr(mpP1, NodeHydraulic::WaveVariable);
             mpND_Zc1 = getSafeNodeDataPtr(mpP1, NodeHydraulic::CharImpedance);
+            mpND_T1 = getSafeNodeDataPtr(mpP1, NodeHydraulic::Temperature);
 
             mpND_p2 = getSafeNodeDataPtr(mpP2, NodeHydraulic::Pressure);
             mpND_q2 = getSafeNodeDataPtr(mpP2, NodeHydraulic::Flow);
+            mpND_Qdot2 = getSafeNodeDataPtr(mpP2, NodeHydraulic::HeatFlow);
             mpND_c2 = getSafeNodeDataPtr(mpP2, NodeHydraulic::WaveVariable);
             mpND_Zc2 = getSafeNodeDataPtr(mpP2, NodeHydraulic::CharImpedance);
+            mpND_T2 = getSafeNodeDataPtr(mpP2, NodeHydraulic::Temperature);
 
             (*mpND_a) = 0;
         }
@@ -88,7 +96,7 @@ namespace hopsan {
         void simulateOneTimestep()
         {
             //Declare local variables
-            double p1, q1, c1, Zc1, p2, q2, c2, Zc2;
+            double p1, q1, Qdot1, c1, Zc1, T1, p2, q2, Qdot2, c2, Zc2, T2;
             bool cav = false;
 
             double n = (*mpN);
@@ -98,8 +106,10 @@ namespace hopsan {
             //Get variable values from nodes
             c1 = (*mpND_c1);
             Zc1 = (*mpND_Zc1);
+            T1 = (*mpND_T1);
             c2 = (*mpND_c2);
             Zc2 = (*mpND_Zc2);
+            T2 = (*mpND_T2);
 
             //Fixed Displacement Pump equations
             q2 = ( dp*n/(2.0*pi) + Clp*(c1-c2) ) / ( (Zc1+Zc2)*Clp+1 );
@@ -140,11 +150,22 @@ namespace hopsan {
                 q1 = -q2;
             }
 
+            if(q2>0) {
+                Qdot1 = q1*rho*cp*T1;
+                Qdot2 = Clp*(p2-p1)*(p2-p1) - Qdot1;
+            }
+            else {
+                Qdot2 = q2*rho*cp*T2;
+                Qdot1 = Clp*(p1-p2)*(p1-p2) - Qdot2;
+            }
+
             //Write new values to nodes
             (*mpND_p1) = p1;
             (*mpND_q1) = q1;
             (*mpND_p2) = p2;
             (*mpND_q2) = q2;
+            (*mpND_Qdot1) = Qdot1;
+            (*mpND_Qdot2) = Qdot2;
             (*mpND_a) += n*mTimestep;
         }
     };
