@@ -56,11 +56,11 @@ namespace hopsan {
 
         // Port and node data pointers
         Port *mpP1, *mpP2;
-        double *mpP1_p, *mpP1_q, *mpP1_c, *mpP1_Zc, *mpP2_p, *mpP2_q, *mpP2_c, *mpP2_Zc;
+        double *mpP1_p, *mpP1_q, *mpP1_c, *mpP1_Zc, *mpP1_Qdot, *mpP1_T, *mpP2_p, *mpP2_q, *mpP2_c, *mpP2_Zc, *mpP2_Qdot, *mpP2_T;
         double *mpPmax, *mpPh, *mpTao, *mpXv;
 
         // Constants
-        double mKcs, mKcf, Cs, Cf, mQnom, mPnom;
+        double mKcs, mKcf, Cs, Cf, mQnom, mPnom, mrho, mcp;
 
     public:
         static Component *Creator()
@@ -82,6 +82,8 @@ namespace hopsan {
             addConstant("k_cs", "Steady State Characteristic due to Spring", "LeakageCoefficient", 0.00000001, mKcs);
             addConstant("k_cf", "Steady State Characteristic due to Flow Forces", "LeakageCoefficient", 0.00000001, mKcf);
             addConstant("q_nom", "Flow with Fully Open Valve and pressure drop Pnom", "m^3/s", 0.001, mQnom);
+            addConstant("rho", "Density", "kg/m^3", 880, mrho);
+            addConstant("cp", "Specific heat capacity", "J/kgK", 1670, mcp);
       }
 
 
@@ -91,11 +93,15 @@ namespace hopsan {
             mpP1_q = getSafeNodeDataPtr(mpP1, NodeHydraulic::Flow);
             mpP1_c = getSafeNodeDataPtr(mpP1, NodeHydraulic::WaveVariable);
             mpP1_Zc = getSafeNodeDataPtr(mpP1, NodeHydraulic::CharImpedance);
+            mpP1_Qdot = getSafeNodeDataPtr(mpP1, NodeHydraulic::HeatFlow);
+            mpP1_T = getSafeNodeDataPtr(mpP1, NodeHydraulic::Temperature);
 
             mpP2_p = getSafeNodeDataPtr(mpP2, NodeHydraulic::Pressure);
             mpP2_q = getSafeNodeDataPtr(mpP2, NodeHydraulic::Flow);
             mpP2_c = getSafeNodeDataPtr(mpP2, NodeHydraulic::WaveVariable);
             mpP2_Zc = getSafeNodeDataPtr(mpP2, NodeHydraulic::CharImpedance);
+            mpP2_Qdot = getSafeNodeDataPtr(mpP2, NodeHydraulic::HeatFlow);
+            mpP2_T = getSafeNodeDataPtr(mpP2, NodeHydraulic::Temperature);
 
             mPnom = 7e6f;
 
@@ -117,17 +123,17 @@ namespace hopsan {
 
         void simulateOneTimestep()
         {
-            double p1, q1, c1, Zc1, p2, q2, c2, Zc2;
+            double p1, q1, T1, Qdot1, c1, Zc1, p2, q2, T2, Qdot2, c2, Zc2;
             double b1, gamma, b2, xs, xh, xsh, wCutoff, pmax, ph, tao;
             bool cav = false;
 
             //Get variable values from nodes
             p1 = (*mpP1_p);
-            q1 = (*mpP1_q);
+            T1 = (*mpP1_T);
             c1 = (*mpP1_c);
             Zc1 = (*mpP1_Zc);
             p2 = (*mpP2_p);
-            q2 = (*mpP2_q);
+            T2 = (*mpP2_T);
             c2 = (*mpP2_c);
             Zc2 = (*mpP2_Zc);
             pmax = (*mpPmax);
@@ -233,11 +239,22 @@ namespace hopsan {
 
             mPrevX0 = x0;
 
+            if(q2>0) {
+                Qdot1 = q1*mrho*mcp*T1;
+                Qdot2 = (p1-p2)*q2 - Qdot1;
+            }
+            else {
+                Qdot2 = q2*mrho*mcp*T2;
+                Qdot1 = (p2-p1)*q1 - Qdot2;
+            }
+
             //Write new variables to nodes
             (*mpP1_p) = p1;
             (*mpP1_q) = q1;
+            (*mpP1_Qdot) = Qdot1;
             (*mpP2_p) = p2;
             (*mpP2_q) = q2;
+            (*mpP2_Qdot) = Qdot2;
             (*mpXv) = x0;
         }
     };

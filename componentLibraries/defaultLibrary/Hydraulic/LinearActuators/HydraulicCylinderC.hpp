@@ -383,23 +383,22 @@ class HydraulicCylinderC : public ComponentC
             for (size_t i=0; i<mNumPorts2; ++i) {
                 dQ2 += (*mvpP2_Qdot[i]);
             }
+
             if(qLeak>0) {
-                dQ1 -= qLeak*mrho*mcp*T1;
+                dQ1 += -qLeak*mrho*mcp*T1;
                 dQ2 += (c1mean-c2mean)*qLeak + qLeak*mrho*mcp*T1;
             }
             else {
-                dQ2 -= qLeak*mrho*mcp*T2;
-                dQ1 += (c2mean-c1mean)*qLeak + qLeak*mrho*mcp*T2;
+                dQ2 += qLeak*mrho*mcp*T2;
+                dQ1 += (c2mean-c1mean)*qLeak - qLeak*mrho*mcp*T2;
             }
             dQ1 += bp*fabs(v3)/2.0;
             dQ2 += bp*fabs(v3)/2.0;
-            //dQ1 *= mTimestep;
-            //dQ2 *= mTimestep;
             double dV1 = -v3*A1;
             double dV2 = v3*A2;
-            double dT1 = (dQ1-dV1*mrho*mcp*T1)/(V1*mrho*mcp);
-            double dT2 = (dQ2-dV2*mrho*mcp*T2)/(V2*mrho*mcp);
-                        //T = dQ/rho/cp/(dV+V*s)
+           // double dT1 = (dQ1-dV1*mrho*mcp*T1)/(V1*mrho*mcp);
+           // double dT2 = (dQ2-dV2*mrho*mcp*T2)/(V2*mrho*mcp);
+            //T = dQ/rho/cp/(dV+V*s)
             mTempDen1[0] = dV1;
             mTempDen1[1] = V1;
             mTempFilter1.setDen(mTempDen1);
@@ -415,24 +414,6 @@ class HydraulicCylinderC : public ComponentC
 
             addDebugMessage("dQ2: "+to_hstring(dQ2));
             addDebugMessage("dV2: "+to_hstring(dV2)+"\n");
-
-
-            //Q = V*rho*cp*T
-            //dQ = dV*rho*cp*T + V*rho*cp*dT
-            //dT = (dQ - dV*rho*cp*T)/(V*rho*cp)
-
-            //dQ = dV*rho*cp*T + V*rho*cp*T*s = T*(dV*rho*cp + V*rho*cp*s) = T*rho*cp*(dV + V*s)
-            //T = dQ/rho/cp/(dV+V*s)
-
-
-
-            //Q = m*cp*T
-            //dQ = m*cp*dT + dm*cp*T
-            //dT = (dQ-dm*cp*T)/(m*cp)
-            //dm = dV*rho
-            //dT = (dQ1-dV1*mrho*cp*T)/(V1*mrho*cp)
-
-            //J/s = kg*J/kg/K*K/s
 
             //Write to nodes
             for(size_t i=0; i<mNumPorts1; ++i)
