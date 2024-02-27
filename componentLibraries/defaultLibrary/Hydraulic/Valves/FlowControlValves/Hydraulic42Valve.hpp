@@ -50,14 +50,16 @@ namespace hopsan {
         SecondOrderTransferFunction mSpoolPosTF;
         TurbulentFlowFunction qTurb_pa;
         TurbulentFlowFunction qTurb_bt;
+        HeatFlowCalculator mHeat;
 
         // Port and node data pointers
         Port *mpPP, *mpPT, *mpPA, *mpPB;
-        double *mpPP_p, *mpPP_q, *mpPP_c, *mpPP_Zc, *mpPT_p, *mpPT_q, *mpPT_c, *mpPT_Zc, *mpPA_p, *mpPA_q, *mpPA_c, *mpPA_Zc, *mpPB_p, *mpPB_q, *mpPB_c, *mpPB_Zc;
+        double *mpPP_p, *mpPP_q, *mpPP_c, *mpPP_Zc, *mpPP_T, *mpPP_Qdot, *mpPT_p, *mpPT_q, *mpPT_c, *mpPT_Zc, *mpPT_T, *mpPT_Qdot, *mpPA_p, *mpPA_q, *mpPA_c, *mpPA_Zc, *mpPA_T, *mpPA_Qdot, *mpPB_p, *mpPB_q, *mpPB_c, *mpPB_Zc, *mpPB_T, *mpPB_Qdot;
         double *mpXvIn, *mpXv, *mpCq, *mpD, *mpF_pa, *mpF_bt, *mpXvmax, *mpRho;
 
         // Constants
         double mOmegah, mDeltah;
+        double mrho, mcp;
 
     public:
         static Component *Creator()
@@ -84,6 +86,8 @@ namespace hopsan {
 
             addConstant("omega_h", "Resonance Frequency", "Frequency", 100.0, mOmegah);
             addConstant("delta_h", "Damping Factor", "-", 1.0, mDeltah);
+            addConstant("rho", "Density", "kg/m^3", 880, mrho);
+            addConstant("cp", "Specific heat capacity", "J/kgK", 1670, mcp);
         }
 
 
@@ -93,27 +97,38 @@ namespace hopsan {
             mpPP_q = getSafeNodeDataPtr(mpPP, NodeHydraulic::Flow);
             mpPP_c = getSafeNodeDataPtr(mpPP, NodeHydraulic::WaveVariable);
             mpPP_Zc = getSafeNodeDataPtr(mpPP, NodeHydraulic::CharImpedance);
+            mpPP_Qdot = getSafeNodeDataPtr(mpPP, NodeHydraulic::HeatFlow);
+            mpPP_T = getSafeNodeDataPtr(mpPP, NodeHydraulic::Temperature);
 
             mpPT_p = getSafeNodeDataPtr(mpPT, NodeHydraulic::Pressure);
             mpPT_q = getSafeNodeDataPtr(mpPT, NodeHydraulic::Flow);
             mpPT_c = getSafeNodeDataPtr(mpPT, NodeHydraulic::WaveVariable);
             mpPT_Zc = getSafeNodeDataPtr(mpPT, NodeHydraulic::CharImpedance);
+            mpPT_Qdot = getSafeNodeDataPtr(mpPT, NodeHydraulic::HeatFlow);
+            mpPT_T = getSafeNodeDataPtr(mpPT, NodeHydraulic::Temperature);
 
             mpPA_p = getSafeNodeDataPtr(mpPA, NodeHydraulic::Pressure);
             mpPA_q = getSafeNodeDataPtr(mpPA, NodeHydraulic::Flow);
             mpPA_c = getSafeNodeDataPtr(mpPA, NodeHydraulic::WaveVariable);
             mpPA_Zc = getSafeNodeDataPtr(mpPA, NodeHydraulic::CharImpedance);
+            mpPA_Qdot = getSafeNodeDataPtr(mpPA, NodeHydraulic::HeatFlow);
+            mpPA_T = getSafeNodeDataPtr(mpPA, NodeHydraulic::Temperature);
 
             mpPB_p = getSafeNodeDataPtr(mpPB, NodeHydraulic::Pressure);
             mpPB_q = getSafeNodeDataPtr(mpPB, NodeHydraulic::Flow);
             mpPB_c = getSafeNodeDataPtr(mpPB, NodeHydraulic::WaveVariable);
             mpPB_Zc = getSafeNodeDataPtr(mpPB, NodeHydraulic::CharImpedance);
+            mpPB_Qdot = getSafeNodeDataPtr(mpPB, NodeHydraulic::HeatFlow);
+            mpPB_T = getSafeNodeDataPtr(mpPB, NodeHydraulic::Temperature);
 
             //Initiate second order low pass filter
             double num[3] = {1.0, 0.0, 0.0};
             double den[3] = {1.0, 2.0*mDeltah/mOmegah, 1.0/(mOmegah*mOmegah)};
             double initXv = limit(*mpXv,0.0,(*mpXvmax));
             mSpoolPosTF.initialize(mTimestep, num, den, initXv, initXv, 0, (*mpXvmax));
+
+            mHeat.setDensity(mrho);
+            mHeat.setHeatCapacity(mcp);
         }
 
 
@@ -122,6 +137,7 @@ namespace hopsan {
             //Declare local variables
             double xv, Kcpa, Kcbt, qpa, qbt;
             double pp, qp, cp, Zcp, pt, qt, ct, Zct, xvin, pa, qa, ca, Zca, pb, qb, cb, Zcb, Cq, rho, xvmax, d, f_pa, f_bt;
+            double Tp, Tt, Ta, Tb, Qdotp, Qdott, Qdota, Qdotb;
             bool cav = false;
 
             //Get variable values from nodes
@@ -133,6 +149,10 @@ namespace hopsan {
             Zca = (*mpPA_Zc);
             cb = (*mpPB_c);
             Zcb = (*mpPB_Zc);
+            Tp = (*mpPP_T);
+            Tt = (*mpPT_T);
+            Ta = (*mpPA_T);
+            Tb = (*mpPB_T);
 
             xvin = (*mpXvIn);
             Cq = (*mpCq);
@@ -228,6 +248,9 @@ namespace hopsan {
                 pa = ca + qa*Zca;
                 pb = cb + qb*Zcb;
             }
+
+            mHeat.calculateHeatFlows(pp, qp, Tp, Qdotp, pa, qa, Ta, Qdota);
+            mHeat.calculateHeatFlows(pb, qb, Tb, Qdotb, pt, qt, Tt, Qdott);
 
             //Write new values to nodes
 

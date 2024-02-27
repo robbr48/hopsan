@@ -211,6 +211,7 @@ HEADERS += \
     include/ComponentUtilities/AuxiliarySimulationFunctions.h \
     include/ComponentUtilities/AuxiliaryMathematicaWrapperFunctions.h \
     include/ComponentUtilities/TempDirectoryHandle.h \
+    include/ComponentUtilities/HeatFlowCalculator.h \
     include/Parameters.h \
     include/Components/DummyComponent.hpp \
     include/ComponentUtilities/EquationSystemSolver.h \

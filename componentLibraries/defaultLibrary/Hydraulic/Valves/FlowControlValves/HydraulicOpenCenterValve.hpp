@@ -52,14 +52,17 @@ namespace hopsan {
         TurbulentFlowFunction qTurb_at;
         TurbulentFlowFunction qTurb_bt;
         TurbulentFlowFunction qTurb_cc;
+        HeatFlowCalculator mHeat;
 
         // Port and node data pointers
         Port *mpPP, *mpPC1, *mpPT, *mpPA, *mpPC2, *mpPB;
         double *mpPP_p, *mpPP_q, *mpPP_c, *mpPP_Zc, *mpPT_p, *mpPT_q, *mpPT_c, *mpPT_Zc, *mpPA_p, *mpPA_q, *mpPA_c, *mpPA_Zc, *mpPB_p, *mpPB_q, *mpPB_c, *mpPB_Zc, *mpPC1_p, *mpPC1_q, *mpPC1_c, *mpPC1_Zc, *mpPC2_p, *mpPC2_q, *mpPC2_c, *mpPC2_Zc;
+        double *mpPP_T, *mpPP_Qdot, *mpPT_T, *mpPT_Qdot, *mpPA_T, *mpPA_Qdot, *mpPB_T, *mpPB_Qdot, *mpPC1_T, *mpPC1_Qdot, *mpPC2_T, *mpPC2_Qdot;
         double *mpXvIn, *mpXv, *mpCq, *mpD, *mpF_pa, *mpF_pb, *mpF_at, *mpF_bt, *mpF_cc, *mpXvmax, *mpRho, *mpX_pa, *mpX_pb, *mpX_at, *mpX_bt, *mpX_cc;
 
         // Constants
         double mOmegah, mDeltah;
+        double mrho, mcp;
 
     public:
         static Component *Creator()
@@ -96,6 +99,8 @@ namespace hopsan {
 
             addConstant("omega_h", "Resonance Frequency", "Frequency", 100.0, mOmegah);
             addConstant("delta_h", "Damping Factor", "-", 1.0, mDeltah);
+            addConstant("rho", "Density", "kg/m^3", 880, mrho);
+            addConstant("cp", "Specific heat capacity", "J/kgK", 1670, mcp);
         }
 
 
@@ -103,38 +108,53 @@ namespace hopsan {
         {
             mpPP_p = getSafeNodeDataPtr(mpPP, NodeHydraulic::Pressure);
             mpPP_q = getSafeNodeDataPtr(mpPP, NodeHydraulic::Flow);
+            mpPP_Qdot = getSafeNodeDataPtr(mpPP, NodeHydraulic::HeatFlow);
             mpPP_c = getSafeNodeDataPtr(mpPP, NodeHydraulic::WaveVariable);
             mpPP_Zc = getSafeNodeDataPtr(mpPP, NodeHydraulic::CharImpedance);
+            mpPP_T = getSafeNodeDataPtr(mpPP, NodeHydraulic::Temperature);
 
             mpPT_p = getSafeNodeDataPtr(mpPT, NodeHydraulic::Pressure);
             mpPT_q = getSafeNodeDataPtr(mpPT, NodeHydraulic::Flow);
+            mpPT_Qdot = getSafeNodeDataPtr(mpPT, NodeHydraulic::HeatFlow);
             mpPT_c = getSafeNodeDataPtr(mpPT, NodeHydraulic::WaveVariable);
             mpPT_Zc = getSafeNodeDataPtr(mpPT, NodeHydraulic::CharImpedance);
+            mpPT_T = getSafeNodeDataPtr(mpPT, NodeHydraulic::Temperature);
 
             mpPA_p = getSafeNodeDataPtr(mpPA, NodeHydraulic::Pressure);
             mpPA_q = getSafeNodeDataPtr(mpPA, NodeHydraulic::Flow);
+            mpPA_Qdot = getSafeNodeDataPtr(mpPA, NodeHydraulic::HeatFlow);
             mpPA_c = getSafeNodeDataPtr(mpPA, NodeHydraulic::WaveVariable);
             mpPA_Zc = getSafeNodeDataPtr(mpPA, NodeHydraulic::CharImpedance);
+            mpPA_T = getSafeNodeDataPtr(mpPA, NodeHydraulic::Temperature);
 
             mpPB_p = getSafeNodeDataPtr(mpPB, NodeHydraulic::Pressure);
             mpPB_q = getSafeNodeDataPtr(mpPB, NodeHydraulic::Flow);
+            mpPB_Qdot = getSafeNodeDataPtr(mpPB, NodeHydraulic::HeatFlow);
             mpPB_c = getSafeNodeDataPtr(mpPB, NodeHydraulic::WaveVariable);
             mpPB_Zc = getSafeNodeDataPtr(mpPB, NodeHydraulic::CharImpedance);
+            mpPB_T = getSafeNodeDataPtr(mpPB, NodeHydraulic::Temperature);
 
             mpPC1_p = getSafeNodeDataPtr(mpPC1, NodeHydraulic::Pressure);
             mpPC1_q = getSafeNodeDataPtr(mpPC1, NodeHydraulic::Flow);
+            mpPC1_Qdot = getSafeNodeDataPtr(mpPC1, NodeHydraulic::HeatFlow);
             mpPC1_c = getSafeNodeDataPtr(mpPC1, NodeHydraulic::WaveVariable);
             mpPC1_Zc = getSafeNodeDataPtr(mpPC1, NodeHydraulic::CharImpedance);
+            mpPC1_T = getSafeNodeDataPtr(mpPC1, NodeHydraulic::Temperature);
 
             mpPC2_p = getSafeNodeDataPtr(mpPC2, NodeHydraulic::Pressure);
             mpPC2_q = getSafeNodeDataPtr(mpPC2, NodeHydraulic::Flow);
+            mpPC2_Qdot = getSafeNodeDataPtr(mpPC2, NodeHydraulic::HeatFlow);
             mpPC2_c = getSafeNodeDataPtr(mpPC2, NodeHydraulic::WaveVariable);
             mpPC2_Zc = getSafeNodeDataPtr(mpPC2, NodeHydraulic::CharImpedance);
+            mpPC2_T = getSafeNodeDataPtr(mpPC2, NodeHydraulic::Temperature);
 
             double num[3] = {1.0, 0.0, 0.0};
             double den[3] = {1.0, 2.0*mDeltah/mOmegah, 1.0/(mOmegah*mOmegah)};
             double initXv = limit((*mpXv), -(*mpXvmax), (*mpXvmax));
             mSpoolPosTF.initialize(mTimestep, num, den, initXv, initXv, -(*mpXvmax), (*mpXvmax));
+
+            mHeat.setDensity(mrho);
+            mHeat.setHeatCapacity(mcp);
         }
 
 
@@ -144,6 +164,7 @@ namespace hopsan {
             double xv, xpanom, xpbnom, xatnom, xbtnom, xccnom, Kcpa, Kcpb, Kcat, Kcbt, Kccc, qpa, qpb, qat, qbt, qcc;
             double pp, qp, cp, Zcp, pt, qt, ct, Zct, xvin, pa, qa, ca, Zca, pb, qb, cb, Zcb, pc1, qc1, cc1, Zcc1, pc2, qc2, cc2, Zcc2;
             double Cq, rho, xvmax, d, f_pa, f_pb, f_at, f_bt, f_cc, x_pa, x_pb, x_at, x_bt, x_cc;
+            double Tp, Tt, Ta, Tb, Tc1, Tc2, Qdotp, Qdott, Qdota, Qdotb, Qdotc1, Qdotc2;
             bool cav = false;
 
             //Get variable values from nodes
@@ -159,6 +180,12 @@ namespace hopsan {
             Zcc1 = (*mpPC1_Zc);
             cc2  = (*mpPC2_c);
             Zcc2 = (*mpPC2_Zc);
+            Tp = (*mpPP_T);
+            Tt = (*mpPT_T);
+            Ta = (*mpPA_T);
+            Tb = (*mpPB_T);
+            Tc1 = (*mpPC1_T);
+            Tc2 = (*mpPC2_T);
 
             xvin  = (*mpXvIn);
             Cq = (*mpCq);
@@ -283,20 +310,36 @@ namespace hopsan {
                 pc2 = cc2 + qc2*Zcc2;
             }
 
+            Qdotp = 0;
+            Qdott = 0;
+            Qdota = 0;
+            Qdotb = 0;
+            mHeat.appendHeatFlows(pp, -qpa, Tp, Qdotp, pa, qpa, Ta, Qdota);
+            mHeat.appendHeatFlows(pp, -qpb, Tp, Qdotp, pb, qpb, Tb, Qdotb);
+            mHeat.appendHeatFlows(pa, -qat, Ta, Qdota, pt, qat, Tt, Qdott);
+            mHeat.appendHeatFlows(pb, -qbt, Tb, Qdotb, pt, qbt, Tt, Qdott);
+            mHeat.calculateHeatFlows(pc1, qc1, Tc1, Qdotc1, pc2, qc2, Tc2, Qdotc2);
+
             //Write new values to nodes
 
-            (*mpPP_p) = cp + qp*Zcp;
+            (*mpPP_p) = pp;
             (*mpPP_q) = qp;
-            (*mpPT_p) = ct + qt*Zct;
+            (*mpPP_Qdot) = Qdotp;
+            (*mpPT_p) = pt;
             (*mpPT_q) = qt;
-            (*mpPA_p) = ca + qa*Zca;
+            (*mpPT_Qdot) = Qdott;
+            (*mpPA_p) = pa;
             (*mpPA_q) = qa;
-            (*mpPB_p) = cb + qb*Zcb;
+            (*mpPA_Qdot) = Qdota;
+            (*mpPB_p) = pb;
             (*mpPB_q) = qb;
-            (*mpPC1_p) = cc1 + qc1*Zcc1;
+            (*mpPB_Qdot) = Qdotb;
+            (*mpPC1_p) = pc1;
             (*mpPC1_q) = qc1;
-            (*mpPC2_p) = cc2 + qc2*Zcc2;
+            (*mpPC1_Qdot) = Qdotc1;
+            (*mpPC2_p) = pc2;
             (*mpPC2_q) = qc2;
+            (*mpPC2_Qdot) = Qdotc2;
             (*mpXv) = xv;
         }
     };

@@ -48,4 +48,5 @@
 #include "ComponentUtilities/EquationSystemSolver.h"
 #include "ComponentUtilities/LookupTable.h"
 #include "ComponentUtilities/TempDirectoryHandle.h"
+#include "ComponentUtilities/HeatFlowCalculator.h"
 #endif // COMPONENTUTILITIES_H_INCLUDED

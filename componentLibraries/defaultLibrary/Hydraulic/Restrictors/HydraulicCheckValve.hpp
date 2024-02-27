@@ -50,8 +50,11 @@ namespace hopsan {
         TurbulentFlowFunction mQTurb;
 
         Port *mpP1, *mpP2;
-        double *mpP1_p, *mpP1_q, *mpP1_c, *mpP1_Zc, *mpP2_p, *mpP2_q, *mpP2_c, *mpP2_Zc;
+        double *mpP1_p, *mpP1_q, *mpP1_c, *mpP1_Zc, *mpP1_T, *mpP1_Qdot, *mpP2_p, *mpP2_q, *mpP2_c, *mpP2_Zc, *mpP2_T, *mpP2_Qdot;
         double *mpKs, *mpX;
+        double rho, cp;
+
+        HeatFlowCalculator mHeat;
 
     public:
         static Component *Creator()
@@ -61,6 +64,9 @@ namespace hopsan {
 
         void configure()
         {
+            addConstant("rho", "Density", "kg/m^3", 880, rho);
+            addConstant("cp", "Specific heat capacity", "J/kgK", 1670, cp);
+
             mpP1 = addPowerPort("P1", "NodeHydraulic");
             mpP2 = addPowerPort("P2", "NodeHydraulic");
 
@@ -76,11 +82,15 @@ namespace hopsan {
             mpP1_q = getSafeNodeDataPtr(mpP1, NodeHydraulic::Flow);
             mpP1_c = getSafeNodeDataPtr(mpP1, NodeHydraulic::WaveVariable);
             mpP1_Zc = getSafeNodeDataPtr(mpP1, NodeHydraulic::CharImpedance);
+            mpP1_T = getSafeNodeDataPtr(mpP1, NodeHydraulic::Temperature);
+            mpP1_Qdot = getSafeNodeDataPtr(mpP1, NodeHydraulic::HeatFlow);
 
             mpP2_p = getSafeNodeDataPtr(mpP2, NodeHydraulic::Pressure);
             mpP2_q = getSafeNodeDataPtr(mpP2, NodeHydraulic::Flow);
             mpP2_c = getSafeNodeDataPtr(mpP2, NodeHydraulic::WaveVariable);
             mpP2_Zc = getSafeNodeDataPtr(mpP2, NodeHydraulic::CharImpedance);
+            mpP2_T = getSafeNodeDataPtr(mpP2, NodeHydraulic::Temperature);
+            mpP2_Qdot = getSafeNodeDataPtr(mpP2, NodeHydraulic::HeatFlow);
 
             double Ks = (*mpKs);
             mQTurb.setFlowCoefficient(Ks);
@@ -90,11 +100,13 @@ namespace hopsan {
         void simulateOneTimestep()
         {
             //Get variable values from nodes
-            double p1, q1, c1, Zc1, p2, q2, c2, Zc2, Ks, x;
+            double p1, q1, c1, Zc1, p2, q2, c2, Zc2, Ks, x, T1, T2, Qdot1, Qdot2;
             c1 = (*mpP1_c);
             Zc1 = (*mpP1_Zc);
             c2 = (*mpP2_c);
             Zc2 = (*mpP2_Zc);
+            T1 = (*mpP1_T);
+            T2 = (*mpP2_T);
             Ks = (*mpKs);
 
             //Checkvalve equations
@@ -139,11 +151,17 @@ namespace hopsan {
                 if (p2 < 0.0) { p2 = 0.0; }
             }
 
+            mHeat.setDensity(rho);
+            mHeat.setHeatCapacity(cp);
+            mHeat.calculateHeatFlows(p1, q1, T1, Qdot1, p2, q2, T2, Qdot2);
+
             //Write new values to nodes
             (*mpP1_p) = p1;
             (*mpP1_q) = q1;
             (*mpP2_p) = p2;
             (*mpP2_q) = q2;
+            (*mpP1_Qdot) = Qdot1;
+            (*mpP2_Qdot) = Qdot2;
             (*mpX) = x;
         }
     };

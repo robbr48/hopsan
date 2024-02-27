@@ -51,6 +51,7 @@ namespace hopsan {
         TurbulentFlowFunction mQTurb_pb;
         TurbulentFlowFunction mQTurb_at;
         TurbulentFlowFunction mQTurb_bt;
+        HeatFlowCalculator mHeat;
 
         // Port and node data pointers
         Port *mpPP, *mpPT, *mpPA, *mpPB;
@@ -133,6 +134,9 @@ namespace hopsan {
             double den[3] = {1.0, 2.0*mDeltah/mOmegah, 1.0/(mOmegah*mOmegah)};
             double initXv = limit(*mpXv,-(*mpXvmax),(*mpXvmax));
             mSpoolPosTF.initialize(mTimestep, num, den, initXv, initXv, -(*mpXvmax), (*mpXvmax));
+
+            mHeat.setDensity(mrho);
+            mHeat.setHeatCapacity(mcp);
         }
 
 
@@ -257,51 +261,23 @@ namespace hopsan {
             Qdott = 0;
             Qdota = 0;
             Qdotb = 0;
-            if(qpa > 0) {
-                Qdotp += -qpa*mrho*mcp*Tp;
-                Qdota += (pp-pa)*qpa + qpa*mrho*mcp*Tp;
-            }
-            else {
-                Qdota += qpa*mrho*mcp*Ta;
-                Qdotp += (pa-pp)*qpa - qpa*mrho*mcp*Ta;
-            }
-            if(qpb > 0) {
-                Qdotp += -qpb*mrho*mcp*Tp;
-                Qdotb += (pp-pb)*qpb + qpb*mrho*mcp*Tp;
-            }
-            else {
-                Qdotb += qpb*mrho*mcp*Tb;
-                Qdotp += (pb-pp)*qpb - qpb*mrho*mcp*Tb;
-            }
-            if(qat > 0) {
-                Qdota += -qat*mrho*mcp*Ta;
-                Qdott += (pa-pt)*qat + qat*mrho*mcp*Ta;
-            }
-            else {
-                Qdott += qat*mrho*mcp*Tt;
-                Qdott += (pt-pa)*qat - qat*mrho*mcp*Tt;
-            }
-            if(qbt > 0) {
-                Qdotb += -qbt*mrho*mcp*Tb;
-                Qdott += (pb-pt)*qbt + qbt*mrho*mcp*Tb;
-            }
-            else {
-                Qdota += qpa*mrho*mcp*Ta;
-                Qdotb += (pt-pb)*qbt - qpa*mrho*mcp*Ta;
-            }
+            mHeat.appendHeatFlows(pp, -qpa, Tp, Qdotp, pa, qpa, Ta, Qdota);
+            mHeat.appendHeatFlows(pp, -qpb, Tp, Qdotp, pb, qpb, Tb, Qdotb);
+            mHeat.appendHeatFlows(pa, -qat, Ta, Qdota, pt, qat, Tt, Qdott);
+            mHeat.appendHeatFlows(pb, -qbt, Tb, Qdotb, pt, qbt, Tt, Qdott);
 
             //Write new values to nodes
 
-            (*mpPP_p) = cp + qp*Zcp;
+            (*mpPP_p) = pp;
             (*mpPP_q) = qp;
             (*mpPP_Qdot) = Qdotp;
-            (*mpPT_p) = ct + qt*Zct;
+            (*mpPT_p) = pt;
             (*mpPT_q) = qt;
             (*mpPT_Qdot) = Qdott;
-            (*mpPA_p) = ca + qa*Zca;
+            (*mpPA_p) = pa;
             (*mpPA_q) = qa;
             (*mpPA_Qdot) = Qdota;
-            (*mpPB_p) = cb + qb*Zcb;
+            (*mpPB_p) = pb;
             (*mpPB_q) = qb;
             (*mpPB_Qdot) = Qdotb;
             (*mpXv) = xv;

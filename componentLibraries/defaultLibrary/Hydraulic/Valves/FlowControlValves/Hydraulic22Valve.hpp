@@ -48,17 +48,19 @@ namespace hopsan {
         // Member variables
         SecondOrderTransferFunction filter;
         TurbulentFlowFunction qTurb_pa;
+        HeatFlowCalculator mHeat;
 
         // Port and node data pointers
         Port *mpPP, *mpPA;
-        double *mpPP_p, *mpPP_q, *mpPP_c, *mpPP_Zc;
-        double *mpPA_p, *mpPA_q, *mpPA_c, *mpPA_Zc;
+        double *mpPP_p, *mpPP_q, *mpPP_c, *mpPP_Zc, *mpPP_T, *mpPP_Qdot;
+        double *mpPA_p, *mpPA_q, *mpPA_c, *mpPA_Zc, *mpPA_T, *mpPA_Qdot;
         double *mpIn_xv, *mpOut_xv;
         double *mpCq, *mpD, *mpF, *mpXvmax, *mpRho;
 
         // Constants
         double mOmegah;
         double mDeltah;
+        double mrho, mcp;
 
     public:
         static Component *Creator()
@@ -82,6 +84,8 @@ namespace hopsan {
 
             addConstant("omega_h", "Resonance Frequency", "Frequency", 100.0, mOmegah);
             addConstant("delta_h", "Damping Factor", "-", 1.0, mDeltah);
+            addConstant("rho", "Density", "kg/m^3", 880, mrho);
+            addConstant("cp", "Specific heat capacity", "J/kgK", 1670, mcp);
         }
 
 
@@ -91,11 +95,15 @@ namespace hopsan {
             mpPP_q = getSafeNodeDataPtr(mpPP, NodeHydraulic::Flow);
             mpPP_c = getSafeNodeDataPtr(mpPP, NodeHydraulic::WaveVariable);
             mpPP_Zc = getSafeNodeDataPtr(mpPP, NodeHydraulic::CharImpedance);
+            mpPP_Qdot = getSafeNodeDataPtr(mpPP, NodeHydraulic::HeatFlow);
+            mpPP_T = getSafeNodeDataPtr(mpPP, NodeHydraulic::Temperature);
 
             mpPA_p = getSafeNodeDataPtr(mpPA, NodeHydraulic::Pressure);
             mpPA_q = getSafeNodeDataPtr(mpPA, NodeHydraulic::Flow);
             mpPA_c = getSafeNodeDataPtr(mpPA, NodeHydraulic::WaveVariable);
             mpPA_Zc = getSafeNodeDataPtr(mpPA, NodeHydraulic::CharImpedance);
+            mpPA_Qdot = getSafeNodeDataPtr(mpPA, NodeHydraulic::HeatFlow);
+            mpPA_T = getSafeNodeDataPtr(mpPA, NodeHydraulic::Temperature);
 
             double xvmax = (*mpXvmax);
 
@@ -104,6 +112,10 @@ namespace hopsan {
             double den[3] = {1.0, 2.0*mDeltah/mOmegah, 1.0/(mOmegah*mOmegah)};
             const double initxv = limit(*mpOut_xv,0,xvmax);
             filter.initialize(mTimestep, num, den, initxv, initxv, 0, xvmax);
+
+            mHeat.setDensity(mrho);
+            mHeat.setHeatCapacity(mcp);
+
             simulateOneTimestep();
         }
 
@@ -111,14 +123,16 @@ namespace hopsan {
         void simulateOneTimestep()
         {
             //Declare local variables
-            double cp, Zcp, ca, Zca, xvin, pp, qp, pa, qa, Cq, rho, d, f, xvmax, xv;
+            double cp, Zcp, ca, Zca, xvin, pp, qp, pa, qa, Cq, rho, d, f, xvmax, xv, Tp, Ta, Qdotp, Qdota;
             bool cav = false;
 
             //Read variables from nodes
             cp = (*mpPP_c);
             Zcp = (*mpPP_Zc);
+            Tp = (*mpPP_T);
             ca = (*mpPA_c);
             Zca = (*mpPA_Zc);
+            Ta = (*mpPA_T);
             xvin = (*mpIn_xv);
 
             Cq = (*mpCq);
@@ -179,11 +193,16 @@ namespace hopsan {
                 pa = ca + qa*Zca;
             }
 
+            mHeat.calculateHeatFlows(pp, -qpa, Tp, Qdotp, pa, qpa, Ta, Qdota);
+
+
             //Calculate pressures from flow and impedance
             (*mpPP_p) = pp;
             (*mpPP_q) = qp;
+            (*mpPP_Qdot) = Qdotp;
             (*mpPA_p) = pa;
             (*mpPA_q) = qa;
+            (*mpPA_Qdot) = Qdota;
             (*mpOut_xv) = xv;
         }
     };

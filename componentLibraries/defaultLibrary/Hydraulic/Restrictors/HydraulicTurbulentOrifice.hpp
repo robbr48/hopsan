@@ -48,6 +48,7 @@ namespace hopsan {
     {
     private:
         TurbulentFlowFunction qTurb;
+        HeatFlowCalculator mHeat;
 
         Port *mpP1, *mpP2;
         double *mpP1_p, *mpP1_q, *mpP1_T, *mpP1_Qdot, *mpP1_c, *mpP1_Zc, *mpP2_p, *mpP2_q, *mpP2_T, *mpP2_Qdot, *mpP2_c, *mpP2_Zc;
@@ -142,14 +143,9 @@ namespace hopsan {
                 if(p2 < 0.0) { p2 = 0.0; }
             }
 
-            if(q2>0) {
-                Qdot1 = q1*rho*cp*T1;
-                Qdot2 = (p1-p2)*q2 - Qdot1;
-            }
-            else {
-                Qdot2 = q2*rho*cp*T2;
-                Qdot1 = (p2-p1)*q1 - Qdot2;
-            }
+            mHeat.setDensity(rho);
+            mHeat.setHeatCapacity(cp);
+            mHeat.calculateHeatFlows(p1, q1, T1, Qdot1, p2, q2, T2, Qdot2);
 
             //Write new variables to nodes
             (*mpP1_p) = p1;
