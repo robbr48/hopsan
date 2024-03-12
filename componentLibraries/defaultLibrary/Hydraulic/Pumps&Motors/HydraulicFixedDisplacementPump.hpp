@@ -48,7 +48,7 @@ namespace hopsan {
     {
     private:
         double *mpND_p1, *mpND_q1, *mpND_Qdot1, *mpND_c1, *mpND_Zc1, *mpND_T1, *mpND_p2, *mpND_q2, *mpND_Qdot2, *mpND_c2, *mpND_Zc2, *mpND_T2, *mpND_a;
-        double *mpN, *mpDp, *mpClp;
+        double *mpN, *mpDp, *mpClp, *mpEtahm;
         Port *mpP1, *mpP2;
         double rho, cp;
 
@@ -70,6 +70,7 @@ namespace hopsan {
             addInputVariable("n_p", "Angular Velocity", "AngularVelocity", 250.0, &mpN);
             addInputVariable("D_p", "Displacement", "Displacement", 0.00005, &mpDp);
             addInputVariable("C_lp", "Leakage coefficient", "LeakageCoefficient", 1e-12, &mpClp);
+            addInputVariable("eta_hm", "Hydromechanical efficiency", "", 0.9, &mpEtahm);
         }
 
 
@@ -152,11 +153,11 @@ namespace hopsan {
 
             if(q2>0) {
                 Qdot1 = q1*rho*cp*T1;
-                Qdot2 = Clp*(p2-p1)*(p2-p1) - Qdot1;
+                Qdot2 = (q1/(*mpEtahm) - q1 + Clp*(p1-p2))*(p1-p2) - Qdot1;
             }
             else {
                 Qdot2 = q2*rho*cp*T2;
-                Qdot1 = Clp*(p1-p2)*(p1-p2) - Qdot2;
+                Qdot1 = (q2/(*mpEtahm) - q2 + Clp*(p2-p1))*(p2-p1) - Qdot2;
             }
 
             //Write new values to nodes
