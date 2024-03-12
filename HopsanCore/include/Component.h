@@ -125,6 +125,7 @@ public:
     virtual bool isComponentSignal() const;
     virtual bool isExperimental() const;
     virtual bool isObsolete() const;
+    virtual bool supportsHeatFlow() const;
 
     // Constants
     void addConstant(const HString &rName, const HString &rDescription, const HString &rUnit, double &rData);

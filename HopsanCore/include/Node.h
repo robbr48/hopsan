@@ -109,10 +109,12 @@ public:
 
     void logData(const size_t logSlot);
 
+
     int getNumberOfPortsByType(const int type) const;
     size_t getNumConnectedPorts() const;
     bool isConnectedToPort(const Port *pPort) const;
 
+    std::vector<Port*> getConnectedPorts() const;
     Port *getSortOrderSourcePort() const;
     Component *getWritePortComponentPtr() const;
     ComponentSystem *getOwnerSystem() const;

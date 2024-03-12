@@ -205,6 +205,11 @@ namespace hopsan {
             (*mpPA_Qdot) = Qdota;
             (*mpOut_xv) = xv;
         }
+
+        bool supportsHeatFlow() const
+        {
+            return true;
+        }
     };
 }
 

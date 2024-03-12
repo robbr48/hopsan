@@ -264,6 +264,11 @@ namespace hopsan {
             (*mpPB_q) = qb;
             (*mpXv) = xv;
         }
+
+        bool supportsHeatFlow() const
+        {
+            return true;
+        }
     };
 }
 

@@ -86,6 +86,11 @@ namespace hopsan {
             *mpP1_c = *mpP;
             *mpP1_Zc = 0.0;
         }
+
+        bool supportsHeatFlow() const
+        {
+            return true;
+        }
     };
 }
 

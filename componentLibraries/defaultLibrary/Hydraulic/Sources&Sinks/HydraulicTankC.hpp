@@ -90,6 +90,11 @@ namespace hopsan {
         {
 
         }
+
+        bool supportsHeatFlow() const
+        {
+            return true;
+        }
     };
 }
 

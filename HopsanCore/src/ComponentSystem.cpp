@@ -1942,6 +1942,28 @@ bool ComponentSystem::checkModelBeforeSimulation()
         addWarningMessage(ss.str().c_str());
     }
 
+    //Check if hydraulic components supporting heat flow are connected to hydraulic components not supporting heat flow
+    for(const auto &node : mSubNodePtrs) {
+        if(node->getNodeType() == "NodeHydraulic") {
+            size_t numSupportHeatFlow = 0;
+            for(const auto &port : node->getConnectedPorts()) {
+                if(port->getComponent()->supportsHeatFlow()) {
+                    ++numSupportHeatFlow;
+                }
+            }
+            if((node->getNumConnectedPorts() != numSupportHeatFlow) &&
+               (numSupportHeatFlow != 0)) {
+                std::stringstream ss;
+                ss << "A hydraulic component supporting heat flow is connected to a component that does not. In connection between [ ";
+                for(const auto &port : node->getConnectedPorts()) {
+                    ss << port->getComponentName().c_str() << "." << port->getName().c_str() << " ";
+                }
+                ss << "]";
+                addWarningMessage(ss.str().c_str());
+            }
+        }
+    }
+
     return true;
 }
 

@@ -161,6 +161,11 @@ namespace hopsan {
             (*mpP1_Qdot) = Qdot1;
             (*mpP2_Qdot) = Qdot2;
         }
+
+        bool supportsHeatFlow() const
+        {
+            return true;
+        }
     };
 }
 

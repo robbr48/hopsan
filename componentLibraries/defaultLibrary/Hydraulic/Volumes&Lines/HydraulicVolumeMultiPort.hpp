@@ -171,6 +171,11 @@ namespace hopsan {
         void finalize()
         {
         }
+
+        bool supportsHeatFlow() const
+        {
+            return true;
+        }
     };
 }
 

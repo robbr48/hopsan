@@ -474,6 +474,11 @@ class HydraulicCylinderC : public ComponentC
             // Filtering of the characteristics
             CxLim = alfa * CxLim + (1.0 - alfa) * NewCxLim;
         }
+
+        bool supportsHeatFlow() const
+        {
+            return true;
+        }
     };
 }
 

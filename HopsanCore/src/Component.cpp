@@ -815,6 +815,14 @@ bool Component::isObsolete() const
     return false;
 }
 
+//! @brief Check if component supports heat flow (only for hydraulic)
+//! @returns true or false
+//! @note This function might be removed later if all hydraulic components support heat flow
+bool Component::supportsHeatFlow() const
+{
+    return false;
+}
+
 //! @brief Returns a pointer to the simulation time variable in the component
 //! @returns pointer to time variable
 double *Component::getTimePtr()

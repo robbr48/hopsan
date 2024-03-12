@@ -353,6 +353,11 @@ bool Node::isConnectedToPort(const Port *pPort) const
     return false;
 }
 
+std::vector<Port *> Node::getConnectedPorts() const
+{
+    return mConnectedPorts;
+}
+
 Port *Node::getSortOrderSourcePort() const
 {
     for(size_t i=0; i<mConnectedPorts.size(); ++i)
