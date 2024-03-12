@@ -52,6 +52,7 @@ namespace hopsan {
         TurbulentFlowFunction mTurb;
         ValveHysteresis mHyst;
         FirstOrderTransferFunction mFilterLP;
+        HeatFlowCalculator mHeat;
         double mPrevX0, x0, x0max;
 
         // Port and node data pointers
@@ -239,14 +240,9 @@ namespace hopsan {
 
             mPrevX0 = x0;
 
-            if(q2>0) {
-                Qdot1 = q1*mrho*mcp*T1;
-                Qdot2 = (p1-p2)*q2 - Qdot1;
-            }
-            else {
-                Qdot2 = q2*mrho*mcp*T2;
-                Qdot1 = (p2-p1)*q1 - Qdot2;
-            }
+            mHeat.setDensity(mrho);
+            mHeat.setHeatCapacity(mcp);
+            mHeat.calculateHeatFlows(p1, q1, T1, Qdot1, p2, q2, T2, Qdot2);
 
             //Write new variables to nodes
             (*mpP1_p) = p1;
