@@ -39,6 +39,8 @@
 #include <map>
 #include <time.h>
 
+#include <execution>
+
 #include "ComponentSystem.h"
 #include "HopsanEssentials.h"
 #include "Quantities.h"
@@ -2684,7 +2686,49 @@ void ComponentSystem::simulateMultiThreaded(const double startT, const double st
         delete(pVectorsC);
         delete(pVectorsQ);
     }
-    else if(algorithm == ForkJoinAlgorithm)
+    else if(algorithm == ForkJoinAlgorithm) {
+
+        addInfoMessage("Using fork-join algorithm with unlimited number of threads.");
+
+        // Round to nearest, we may not get exactly the stop time that we want
+        size_t numSimulationSteps = calcNumSimSteps(mTime, stopT); //Here mTime is the last time step since it is not updated yet
+
+        std::thread *tt;
+
+        //Simulate
+        for (size_t i=0; i<numSimulationSteps; ++i)
+        {
+            if (mStopSimulation)
+            {
+                break;
+            }
+
+            mTime += mTimestep; //mTime is updated here before the simulation,
+            //mTime is the current time during the simulateOneTimestep
+
+            //Signal components
+            for (size_t s=0; s < mComponentSignalptrs.size(); ++s)
+            {
+                mComponentSignalptrs[s]->simulate(mTime);
+            }
+
+            //C components
+            double time = mTime;
+            std::for_each(std::execution::par, mComponentCptrs.begin(), mComponentCptrs.end(), [time](Component* obj) {
+                    obj->simulate(time);
+                });
+
+            //Q components
+            std::for_each(std::execution::par, mComponentQptrs.begin(), mComponentQptrs.end(), [time](Component* obj) {
+                    obj->simulate(time);
+                });
+
+            ++mTotalTakenSimulationSteps;
+
+            logTimeAndNodes(mTotalTakenSimulationSteps);
+        }
+    }
+    else if(algorithm == ForkJoinAlgorithm && false)
     {
         addInfoMessage("Using fork-join algorithm with unlimited number of threads.");
 
@@ -2744,6 +2788,49 @@ void ComponentSystem::simulateMultiThreaded(const double startT, const double st
         }
     }
     else if(algorithm == ClusteredForkJoinAlgorithm)
+    {
+        addInfoMessage("Using clustered fork-join algorithm with unlimited number of threads.");
+
+        // Round to nearest, we may not get exactly the stop time that we want
+        size_t numSimulationSteps = calcNumSimSteps(mTime, stopT); //Here mTime is the last time step since it is not updated yet
+
+        std::thread *tt;
+
+        //Simulate
+        for (size_t i=0; i<numSimulationSteps; ++i)
+        {
+            if (mStopSimulation)
+            {
+                break;
+            }
+
+            mTime += mTimestep; //mTime is updated here before the simulation,
+            //mTime is the current time during the simulateOneTimestep
+
+            //Signal components
+            for (size_t s=0; s < mComponentSignalptrs.size(); ++s)
+            {
+                mComponentSignalptrs[s]->simulate(mTime);
+            }
+
+            double time = mTime;
+
+            //C components
+            std::for_each(std::execution::par, mpMultiThreadPrivates->mSplitCVector.begin(), mpMultiThreadPrivates->mSplitCVector.end(), [time](std::vector<Component*> obj) {
+                    simOneStep(&obj, time);
+                });
+
+            //Q components
+            std::for_each(std::execution::par, mpMultiThreadPrivates->mSplitQVector.begin(), mpMultiThreadPrivates->mSplitQVector.end(), [time](std::vector<Component*> obj) {
+                    simOneStep(&obj, time);
+                });
+
+            ++mTotalTakenSimulationSteps;
+
+            logTimeAndNodes(mTotalTakenSimulationSteps);
+        }
+    }
+    else if(algorithm == ClusteredForkJoinAlgorithm && false)
     {
         addInfoMessage("Using clustered fork-join algorithm with unlimited number of threads.");
 

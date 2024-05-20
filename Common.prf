@@ -19,7 +19,7 @@ CONFIG(release, debug|release) {
 }
 
 # Enable C++14
-CONFIG += c++14
+CONFIG += c++20
 
 #Determine if default component lib should be build in
 #DEFINES *= HOPSAN_INTERNALDEFAULTCOMPONENTS

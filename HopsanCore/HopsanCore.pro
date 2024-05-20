@@ -109,7 +109,7 @@ win32 {
     }
 }
 unix {
-    LIBS += -ldl
+    LIBS += -ldl -ltbb
 
     # Add runtime search path so that dynamically loaded libraries in the same directory can be found.
     # Note! QMAKE_LFLAGS_RPATH and QMAKE_RPATHDIR does not seem hande $$ORIGIN, adding manually to LFLAGS
