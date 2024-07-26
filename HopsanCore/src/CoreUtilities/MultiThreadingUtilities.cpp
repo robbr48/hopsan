@@ -100,9 +100,9 @@ size_t determineActualNumberOfThreads(const size_t nDesiredThreads)
 //! @param *pBarrier_Q Pointer to barrier before Q-type components
 //! @param *pBarrier_N Pointer to barrier before node logging
 void simSlave(ComponentSystem *pSystem,
-              std::vector<Component*> &sVector,
-              std::vector<Component*> &cVector,
-              std::vector<Component*> &qVector,
+              std::vector<Component*> *sVector,
+              std::vector<Component*> *cVector,
+              std::vector<Component*> *qVector,
               std::vector<Node*> &nVector,
               double startTime,
               double timeStep,
@@ -126,9 +126,9 @@ void simSlave(ComponentSystem *pSystem,
         while(pBarrier_S->isLocked()){}                         //Wait at S barrier
         if(pSystem->wasSimulationAborted()) break;
 
-        for(size_t i=0; i<sVector.size(); ++i)
+        for(size_t i=0; i<sVector->size(); ++i)
         {
-            sVector[i]->simulate(time);
+            (*sVector)[i]->simulate(time);
         }
 
 
@@ -138,9 +138,9 @@ void simSlave(ComponentSystem *pSystem,
         while(pBarrier_C->isLocked()){}                         //Wait at C barrier
         if(pSystem->wasSimulationAborted()) break;
 
-        for(size_t i=0; i<cVector.size(); ++i)
+        for(size_t i=0; i<cVector->size(); ++i)
         {
-            cVector[i]->simulate(time);
+            (*cVector)[i]->simulate(time);
         }
 
 
@@ -150,9 +150,9 @@ void simSlave(ComponentSystem *pSystem,
         while(pBarrier_Q->isLocked()){}                         //Wait at Q barrier
         if(pSystem->wasSimulationAborted()) break;
 
-        for(size_t i=0; i<qVector.size(); ++i)
+        for(size_t i=0; i<qVector->size(); ++i)
         {
-            qVector[i]->simulate(time);
+            (*qVector)[i]->simulate(time);
         }
 
         //! Log Nodes !//
@@ -184,8 +184,8 @@ void simSlave(ComponentSystem *pSystem,
 //! @param *pBarrier_C Pointer to barrier before C-type components
 //! @param *pBarrier_Q Pointer to barrier before Q-type components
 //! @param *pBarrier_N Pointer to barrier before node logging
-void simMaster(ComponentSystem *pSystem, std::vector<Component *> &sVector, std::vector<Component *> &cVector,
-               std::vector<Component *> &qVector, std::vector<Node *> &nVector, std::vector<double *> &pSimTimes, double startTime, double timeStep,
+void simMaster(ComponentSystem *pSystem, std::vector<Component *> *sVector, std::vector<Component *> *cVector,
+               std::vector<Component *> *qVector, std::vector<Node *> &nVector, std::vector<double *> &pSimTimes, double startTime, double timeStep,
                size_t numSimSteps, BarrierLock *pBarrier_S, BarrierLock *pBarrier_C,
                BarrierLock *pBarrier_Q, BarrierLock *pBarrier_N)
 {
@@ -219,9 +219,9 @@ void simMaster(ComponentSystem *pSystem, std::vector<Component *> &sVector, std:
         pBarrier_C->lock();                    //Lock next barrier (must be done before unlocking this one, to prevent deadlocks)
         pBarrier_S->unlock();                  //Unlock signal barrier
 
-        for(size_t i=0; i<sVector.size(); ++i)
+        for(size_t i=0; i<sVector->size(); ++i)
         {
-            sVector[i]->simulate(time);
+            (*sVector)[i]->simulate(time);
         }
 
         //! C Components !//
@@ -245,9 +245,9 @@ void simMaster(ComponentSystem *pSystem, std::vector<Component *> &sVector, std:
         pBarrier_Q->lock();
         pBarrier_C->unlock();
 
-        for(size_t i=0; i<cVector.size(); ++i)
+        for(size_t i=0; i<cVector->size(); ++i)
         {
-            cVector[i]->simulate(time);
+            (*cVector)[i]->simulate(time);
         }
 
         //! Q Components !//
@@ -270,9 +270,9 @@ void simMaster(ComponentSystem *pSystem, std::vector<Component *> &sVector, std:
         }
         pBarrier_N->lock();
         pBarrier_Q->unlock();
-        for(size_t i=0; i<qVector.size(); ++i)
+        for(size_t i=0; i<qVector->size(); ++i)
         {
-            qVector[i]->simulate(time);
+            (*qVector)[i]->simulate(time);
         }
 
         for(size_t i=0; i<pSimTimes.size(); ++i)
@@ -608,7 +608,7 @@ void simOneStep(std::vector<Component *> *pComponentPtrs, double stopTime)
 
     for (size_t i=0; i<nComponents; ++i)
     {
-        pComponentPtrs->at(i)->simulate(stopTime);
+        (*pComponentPtrs)[i]->simulate(stopTime);
     }
 }
 

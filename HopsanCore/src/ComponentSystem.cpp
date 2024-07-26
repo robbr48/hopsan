@@ -114,9 +114,9 @@ namespace hopsan {
 class ComponentSystemMultiThreadPrivates {
 public:
     std::vector<double *> mvTimePtrs;
-    std::vector< std::vector<Component*> > mSplitCVector;
-    std::vector< std::vector<Component*> > mSplitQVector;
-    std::vector< std::vector<Component*> > mSplitSignalVector;
+    std::vector< std::vector<Component*> *> mSplitCVector;
+    std::vector< std::vector<Component*> *> mSplitQVector;
+    std::vector< std::vector<Component*> *> mSplitSignalVector;
     std::vector< std::vector<Node*> > mSplitNodeVector;
 #if defined(HOPSANCORE_USEMULTITHREADING)
     std::mutex mStopMutex;
@@ -613,7 +613,7 @@ void ComponentSystem::clear()
 #define USENEWSORTCODE
 //! @brief Sorts a component vector
 //! Components are sorted so that they are always simulated after the components they receive signals from. Algebraic loops can be detected, in that case this function does nothing.
-bool ComponentSystem::sortComponentVector(std::vector<Component*> &rComponentVector)
+bool ComponentSystem::sortComponentVector(std::vector<Component*> *pComponentVector)
 {
     std::vector<Component*> newComponentVector;
 
@@ -624,7 +624,7 @@ bool ComponentSystem::sortComponentVector(std::vector<Component*> &rComponentVec
         didSomething = false;
         std::vector<Component*>::iterator it;
         //Loop through the unsorted signal component vector
-        for(it=rComponentVector.begin(); it!=rComponentVector.end(); ++it)
+        for(it=pComponentVector->begin(); it!=pComponentVector->end(); ++it)
         {
             // A pointer to an unsorted component
             Component* pUnsrtComp = (*it);
@@ -642,8 +642,8 @@ bool ComponentSystem::sortComponentVector(std::vector<Component*> &rComponentVec
                     Component* pRequiredComponent=0;
 
                     bool isReadPort = pPort->getPortType() == ReadPortType || pPort->getPortType() == ReadMultiportType ||
-                            ( (pUnsrtComp->getTypeName() == SUBSYSTEMTYPENAME) && (pPort->getInternalPortType() == ReadPortType)) ||
-                            ( (pUnsrtComp->getTypeName() == CONDITIONALTYPENAME) && (pPort->getInternalPortType() == ReadPortType));
+                            ( (pUnsrtComp->getTypeName() == HOPSAN_BUILTIN_TYPENAME_SUBSYSTEM) && (pPort->getInternalPortType() == ReadPortType)) ||
+                            ( (pUnsrtComp->getTypeName() == HOPSAN_BUILTIN_TYPENAME_CONDITIONALSUBSYSTEM) && (pPort->getInternalPortType() == ReadPortType));
                     if ( isReadPort && pPort->isConnected() )
                     {
                         pRequiredComponent = pPort->getNodePtr()->getWritePortComponentPtr();
@@ -653,7 +653,7 @@ bool ComponentSystem::sortComponentVector(std::vector<Component*> &rComponentVec
                         if(pRequiredComponent->mpSystemParent == this)
                         {
                             if(!vectorContains<Component*>(newComponentVector, pRequiredComponent) &&
-                                    vectorContains<Component*>(rComponentVector, pRequiredComponent)
+                                    vectorContains<Component*>((*pComponentVector), pRequiredComponent)
                                     /*requiredComponent->getTypeCQS() == pPort->getComponent()->getTypeCQS()*//*Component::S*/)
                             {
                                 readyToAdd = false;     //Depending on normal component which has not yet been added
@@ -663,7 +663,7 @@ bool ComponentSystem::sortComponentVector(std::vector<Component*> &rComponentVec
                         {
                             if(!vectorContains<Component*>(newComponentVector, pRequiredComponent->mpSystemParent) &&
                                     (pRequiredComponent->mpSystemParent->getTypeCQS() == pPort->getComponent()->getTypeCQS()) &&
-                                    vectorContains<Component*>(rComponentVector,pRequiredComponent->mpSystemParent))
+                                    vectorContains<Component*>((*pComponentVector),pRequiredComponent->mpSystemParent))
                             {
                                 readyToAdd = false;     //Depending on subsystem component which has not yet been added
                             }
@@ -680,9 +680,9 @@ bool ComponentSystem::sortComponentVector(std::vector<Component*> &rComponentVec
         }
     }
 
-    if(newComponentVector.size() == rComponentVector.size())   //All components moved to new vector = success!
+    if(newComponentVector.size() == pComponentVector->size())   //All components moved to new vector = success!
     {
-        rComponentVector = newComponentVector;
+        (*pComponentVector) = newComponentVector;
         if(newComponentVector.size() > 0 && newComponentVector[0]->getTypeCQS() == SType)
         {
             HString ss;
@@ -710,9 +710,9 @@ bool ComponentSystem::sortComponentVector(std::vector<Component*> &rComponentVec
         didSomething = false;
 
         // Loop through the unsorted component vector
-        for(size_t c=0; c<rComponentVector.size(); ++c) {
+        for(size_t c=0; c<pComponentVector->size(); ++c) {
             // A pointer to an unsorted component
-            Component* pUnsrtComp = rComponentVector[c];
+            Component* pUnsrtComp = (*pComponentVector)[c];
             //Ignore components that are already added to the new vector
             if(!vectorContains<Component*>(newComponentVector, pUnsrtComp)) {
                 bool readyToAdd=true;
@@ -731,7 +731,7 @@ bool ComponentSystem::sortComponentVector(std::vector<Component*> &rComponentVec
 
                     if ( (sortHint == Destination) && pPort->isConnected() ) {
                         std::vector<Port *> sourcePorts;
-                        for(int s=0; s<pPort->getNumPorts(); ++s) {
+                        for(size_t s=0; s<pPort->getNumPorts(); ++s) {
                             sourcePorts.push_back(pPort->getNodePtr(s)->getSortOrderSourcePort());
                         }
                         for(size_t p=0; p<sourcePorts.size(); ++p) {
@@ -745,7 +745,7 @@ bool ComponentSystem::sortComponentVector(std::vector<Component*> &rComponentVec
                             Component *pRequiredComponent = pRequiredComponents[r];
                             if(pRequiredComponent->mpSystemParent == this) {
                                 if(!vectorContains<Component*>(newComponentVector, pRequiredComponent) &&
-                                        vectorContains<Component*>(rComponentVector,pRequiredComponent)) {
+                                        vectorContains<Component*>((*pComponentVector),pRequiredComponent)) {
                                     readyToAdd = false;     //Depending on normal component which has not yet been added
                                     break;
                                 }
@@ -753,7 +753,7 @@ bool ComponentSystem::sortComponentVector(std::vector<Component*> &rComponentVec
                             else {
                                 if(!vectorContains<Component*>(newComponentVector, pRequiredComponent->mpSystemParent) &&
                                         (pRequiredComponent->mpSystemParent->getTypeCQS() == pPort->getComponent()->getTypeCQS()) &&
-                                        vectorContains<Component*>(rComponentVector,pRequiredComponent->mpSystemParent)) {
+                                        vectorContains<Component*>((*pComponentVector),pRequiredComponent->mpSystemParent)) {
                                     readyToAdd = false;     //Depending on subsystem component which has not yet been added
                                     break;
                                 }
@@ -770,7 +770,7 @@ bool ComponentSystem::sortComponentVector(std::vector<Component*> &rComponentVec
         }
     }
 
-    if(newComponentVector.size() == rComponentVector.size())   //All components moved to new vector = success!
+    if(newComponentVector.size() == pComponentVector->size())   //All components moved to new vector = success!
     {
         if(newComponentVector.size() > 0 && newComponentVector[0]->getTypeCQS() == SType)
         {
@@ -781,7 +781,7 @@ bool ComponentSystem::sortComponentVector(std::vector<Component*> &rComponentVec
             }
             addDebugMessage("Sorted components successfully!\nSignal components will be simulated in the following order:\n" + names);
         }
-        rComponentVector.swap(newComponentVector);
+        pComponentVector->swap(newComponentVector);
     }
     else    //Something went wrong, all components were not moved. This is likely due to an algebraic loop.
     {
@@ -2266,13 +2266,13 @@ bool ComponentSystem::initialize(const double startT, const double stopT)
     adjustTimestep(mComponentQptrs);
 
     // Sort signal components, if they can not be sorted (algebraic loop), return with failure
-    if(!sortComponentVector(mComponentSignalptrs))
+    if(!sortComponentVector(&mComponentSignalptrs))
     {
         return false;
     }
     // Sort C and Q components
-    sortComponentVector(mComponentCptrs);
-    sortComponentVector(mComponentQptrs);
+    sortComponentVector(&mComponentCptrs);
+    sortComponentVector(&mComponentQptrs);
 
     // run top-level system initialization functions
     if (this->isTopLevelSystem())
@@ -2448,7 +2448,7 @@ void ComponentSystem::simulateMultiThreaded(const double startT, const double st
                 {
                     if(c>mComponentCptrs.size()-1)
                         break;
-                    mpMultiThreadPrivates->mSplitCVector[t].push_back(mComponentCptrs[c]);
+                    mpMultiThreadPrivates->mSplitCVector[t]->push_back(mComponentCptrs[c]);
                     ++c;
                 }
             }
@@ -2459,7 +2459,7 @@ void ComponentSystem::simulateMultiThreaded(const double startT, const double st
                 {
                     if(q>mComponentQptrs.size()-1)
                         break;
-                    mpMultiThreadPrivates->mSplitQVector[t].push_back(mComponentQptrs[q]);
+                    mpMultiThreadPrivates->mSplitQVector[t]->push_back(mComponentQptrs[q]);
                     ++q;
                 }
             }
@@ -2486,9 +2486,9 @@ void ComponentSystem::simulateMultiThreaded(const double startT, const double st
 
         tt[0] = std::thread(simMaster,
                             this,
-                            std::ref(mpMultiThreadPrivates->mSplitSignalVector[0]),
-                            std::ref(mpMultiThreadPrivates->mSplitCVector[0]),
-                            std::ref(mpMultiThreadPrivates->mSplitQVector[0]),             //Create master thread
+                            mpMultiThreadPrivates->mSplitSignalVector[0],
+                            mpMultiThreadPrivates->mSplitCVector[0],
+                            mpMultiThreadPrivates->mSplitQVector[0],             //Create master thread
                             std::ref(mpMultiThreadPrivates->mSplitNodeVector[0]),
                             std::ref(mpMultiThreadPrivates->mvTimePtrs),
                             mTime,
@@ -2503,9 +2503,9 @@ void ComponentSystem::simulateMultiThreaded(const double startT, const double st
         {
             tt[t] = std::thread(simSlave,
                                 this,
-                                std::ref(mpMultiThreadPrivates->mSplitSignalVector[t]),
-                                std::ref(mpMultiThreadPrivates->mSplitCVector[t]),
-                                std::ref(mpMultiThreadPrivates->mSplitQVector[t]),          //Create slave threads
+                                mpMultiThreadPrivates->mSplitSignalVector[t],
+                                mpMultiThreadPrivates->mSplitCVector[t],
+                                mpMultiThreadPrivates->mSplitQVector[t],          //Create slave threads
                                 std::ref(mpMultiThreadPrivates->mSplitNodeVector[t]),
                                 mTime,
                                 mTimestep,
@@ -2626,13 +2626,13 @@ void ComponentSystem::simulateMultiThreaded(const double startT, const double st
         std::vector<ThreadSafeVector *> *pVectorsC = new std::vector<ThreadSafeVector *>();
         for(size_t i=0; i<mpMultiThreadPrivates->mSplitCVector.size(); ++i)
         {
-            pVectorsC->push_back(new ThreadSafeVector(mpMultiThreadPrivates->mSplitCVector[i], maxSize));
+            pVectorsC->push_back(new ThreadSafeVector((*mpMultiThreadPrivates->mSplitCVector[i]), maxSize));
         }
 
         std::vector<ThreadSafeVector *> *pVectorsQ = new std::vector<ThreadSafeVector *>();
         for(size_t i=0; i<mpMultiThreadPrivates->mSplitQVector.size(); ++i)
         {
-            pVectorsQ->push_back(new ThreadSafeVector(mpMultiThreadPrivates->mSplitQVector[i], maxSize));
+            pVectorsQ->push_back(new ThreadSafeVector((*mpMultiThreadPrivates->mSplitQVector[i]), maxSize));
         }
 
         std::thread *tt = new std::thread[nThreads];
@@ -2692,8 +2692,6 @@ void ComponentSystem::simulateMultiThreaded(const double startT, const double st
 
         // Round to nearest, we may not get exactly the stop time that we want
         size_t numSimulationSteps = calcNumSimSteps(mTime, stopT); //Here mTime is the last time step since it is not updated yet
-
-        std::thread *tt;
 
         //Simulate
         for (size_t i=0; i<numSimulationSteps; ++i)
@@ -2794,8 +2792,6 @@ void ComponentSystem::simulateMultiThreaded(const double startT, const double st
         // Round to nearest, we may not get exactly the stop time that we want
         size_t numSimulationSteps = calcNumSimSteps(mTime, stopT); //Here mTime is the last time step since it is not updated yet
 
-        std::thread *tt;
-
         //Simulate
         for (size_t i=0; i<numSimulationSteps; ++i)
         {
@@ -2816,13 +2812,13 @@ void ComponentSystem::simulateMultiThreaded(const double startT, const double st
             double time = mTime;
 
             //C components
-            std::for_each(std::execution::par, mpMultiThreadPrivates->mSplitCVector.begin(), mpMultiThreadPrivates->mSplitCVector.end(), [time](std::vector<Component*> obj) {
-                    simOneStep(&obj, time);
+            std::for_each(std::execution::par, mpMultiThreadPrivates->mSplitCVector.begin(), mpMultiThreadPrivates->mSplitCVector.end(), [time](std::vector<Component*> *obj) {
+                    simOneStep(obj, time);
                 });
 
             //Q components
-            std::for_each(std::execution::par, mpMultiThreadPrivates->mSplitQVector.begin(), mpMultiThreadPrivates->mSplitQVector.end(), [time](std::vector<Component*> obj) {
-                    simOneStep(&obj, time);
+            std::for_each(std::execution::par, mpMultiThreadPrivates->mSplitQVector.begin(), mpMultiThreadPrivates->mSplitQVector.end(), [time](std::vector<Component*> *obj) {
+                    simOneStep(obj, time);
                 });
 
             ++mTotalTakenSimulationSteps;
@@ -2861,7 +2857,7 @@ void ComponentSystem::simulateMultiThreaded(const double startT, const double st
             for (size_t c=0; c < mpMultiThreadPrivates->mSplitCVector.size(); ++c)
             {
                 tt[c] = std::thread(simOneStep,
-                                    &mpMultiThreadPrivates->mSplitCVector[c],
+                                    std::ref(mpMultiThreadPrivates->mSplitCVector[c]),
                                     mTime);
             }
             for(size_t c=0; c<mpMultiThreadPrivates->mSplitCVector.size(); ++c)
@@ -2875,7 +2871,7 @@ void ComponentSystem::simulateMultiThreaded(const double startT, const double st
             for (size_t q=0; q < mpMultiThreadPrivates->mSplitQVector.size(); ++q)
             {
                 tt[q] = std::thread(simOneStep,
-                                    &mpMultiThreadPrivates->mSplitQVector[q],
+                                    std::ref(mpMultiThreadPrivates->mSplitQVector[q]),
                                     mTime);
             }
             for(size_t q=0; q<mpMultiThreadPrivates->mSplitQVector.size(); ++q)
@@ -2934,15 +2930,16 @@ void ComponentSystem::simulateMultiThreaded(const double startT, const double st
 //! Greedy algorithm is used. This does not guarantee an optimal solution, but is gives a 4/3-approximation.
 //! @param rSplitCVector Reference to vector with vectors of components (one vector per thread)
 //! @param nThreads Number of simulation threads
-void ComponentSystem::distributeCcomponents(vector< vector<Component*> > &rSplitCVector, size_t nThreads)
+void ComponentSystem::distributeCcomponents(vector< vector<Component*> *> &rSplitCVector, size_t nThreads)
 {
     vector<double> timeVector;
     timeVector.resize(nThreads);
+    rSplitCVector.resize(nThreads);
     for(size_t i=0; i<nThreads; ++i)
     {
         timeVector[i] = 0;
+        rSplitCVector[i] = new std::vector<Component*>;
     }
-    rSplitCVector.resize(nThreads);
 
     //Cycle components from largest to smallest
     for(size_t c=0; c<mComponentCptrs.size(); ++c)
@@ -2960,7 +2957,7 @@ void ComponentSystem::distributeCcomponents(vector< vector<Component*> > &rSplit
         }
 
         //Insert current component to vector with smallest time
-        rSplitCVector[smallestIndex].push_back(mComponentCptrs[c]);
+        rSplitCVector[smallestIndex]->push_back(mComponentCptrs[c]);
         timeVector[smallestIndex] += mComponentCptrs[c]->getMeasuredTime();
     }
 
@@ -2975,9 +2972,9 @@ void ComponentSystem::distributeCcomponents(vector< vector<Component*> > &rSplit
     {
         sortComponentVector(rSplitCVector[i]);
 
-        for(size_t j=0; j<rSplitCVector[i].size(); ++j)
+        for(size_t j=0; j<rSplitCVector[i]->size(); ++j)
         {
-            addDebugMessage("   "+rSplitCVector[i][j]->getName());
+            addDebugMessage("   "+(*rSplitCVector[i])[j]->getName());
         }
     }
 }
@@ -2987,15 +2984,16 @@ void ComponentSystem::distributeCcomponents(vector< vector<Component*> > &rSplit
 //! Greedy algorithm is used. This does not guarantee an optimal solution, but is gives a 4/3-approximation.
 //! @param rSplitQVector Reference to vector with vectors of components (one vector per thread)
 //! @param nThreads Number of simulation threads
-void ComponentSystem::distributeQcomponents(vector< vector<Component*> > &rSplitQVector, size_t nThreads)
+void ComponentSystem::distributeQcomponents(vector< vector<Component*> *> &rSplitQVector, size_t nThreads)
 {
     vector<double> timeVector;
     timeVector.resize(nThreads);
+    rSplitQVector.resize(nThreads);
     for(size_t i=0; i<nThreads; ++i)
     {
         timeVector[i] = 0;
+        rSplitQVector[i] = new std::vector<Component*>;
     }
-    rSplitQVector.resize(nThreads);
 
     //Cycle components from largest to smallest
     for(size_t q=0; q<mComponentQptrs.size(); ++q)
@@ -3013,7 +3011,7 @@ void ComponentSystem::distributeQcomponents(vector< vector<Component*> > &rSplit
         }
 
         //Insert current component to vector with smallest time
-        rSplitQVector[smallestIndex].push_back(mComponentQptrs[q]);
+        rSplitQVector[smallestIndex]->push_back(mComponentQptrs[q]);
         timeVector[smallestIndex] += mComponentQptrs[q]->getMeasuredTime();
     }
 
@@ -3028,9 +3026,9 @@ void ComponentSystem::distributeQcomponents(vector< vector<Component*> > &rSplit
     {
         sortComponentVector(rSplitQVector[i]);
 
-        for(size_t j=0; j<rSplitQVector[i].size(); ++j)
+        for(size_t j=0; j<rSplitQVector[i]->size(); ++j)
         {
-            addDebugMessage("   "+rSplitQVector[i][j]->getName());
+            addDebugMessage("   "+(*rSplitQVector[i])[j]->getName());
         }
     }
 }
@@ -3039,7 +3037,7 @@ void ComponentSystem::distributeQcomponents(vector< vector<Component*> > &rSplit
 //! @brief Helper function that distributes signal components over one vector per thread.
 //! @param rSplitSignalVector Reference to vector with vectors of components (one vector per thread)
 //! @param nThreads Number of simulation threads
-void ComponentSystem::distributeSignalcomponents(vector< vector<Component*> > &rSplitSignalVector, size_t nThreads)
+void ComponentSystem::distributeSignalcomponents(vector< vector<Component*> *> &rSplitSignalVector, size_t nThreads)
 {
 
     //First we want to divide the components into groups,
@@ -3104,6 +3102,9 @@ void ComponentSystem::distributeSignalcomponents(vector< vector<Component*> > &r
     //with least measured time first.
 
     rSplitSignalVector.resize(nThreads);
+    for(int i=0; i<nThreads; ++i) {
+        rSplitSignalVector[i] = new std::vector<Component*>;
+    }
     size_t i=0;                                             //Group number
     size_t currentVector=0;                                 //The vector to which we are currently adding components
     size_t nAddedComponents=0;                              //Total amount of added components
@@ -3120,7 +3121,7 @@ void ComponentSystem::distributeSignalcomponents(vector< vector<Component*> > &r
         {
             if((*it).second == i)                           //Add all components with group number i to current vector
             {
-                rSplitSignalVector[currentVector].push_back((*it).first);
+                rSplitSignalVector[currentVector]->push_back((*it).first);
                 vectorTime[currentVector] += (*it).first->getMeasuredTime();
                 ++nAddedComponents;
             }

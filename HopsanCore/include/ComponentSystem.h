@@ -137,9 +137,9 @@ namespace hopsan {
         bool simulateAndMeasureTime(const size_t nSteps);
         double getTotalMeasuredTime();
         void sortComponentVectorsByMeasuredTime();
-        void distributeCcomponents(std::vector< std::vector<Component*> > &rSplitCVector, size_t nThreads);
-        void distributeQcomponents(std::vector< std::vector<Component*> > &rSplitQVector, size_t nThreads);
-        void distributeSignalcomponents(std::vector< std::vector<Component*> > &rSplitSignalVector, size_t nThreads);
+        void distributeCcomponents(std::vector< std::vector<Component*> *> &rSplitCVector, size_t nThreads);
+        void distributeQcomponents(std::vector< std::vector<Component*> *> &rSplitQVector, size_t nThreads);
+        void distributeSignalcomponents(std::vector< std::vector<Component*> *> &rSplitSignalVector, size_t nThreads);
         void distributeNodePointers(std::vector< std::vector<Node*> > &rSplitNodeVector, size_t nThreads);
         void reschedule(size_t nThreads);
 
@@ -214,7 +214,7 @@ namespace hopsan {
         // Clear all contents of the system (use in destructor)
         void clear();
 
-        bool sortComponentVector(std::vector<Component*> &rOldSignalVector);
+        bool sortComponentVector(std::vector<Component *> *pComponentVector);
 
         // UniqueName specific functions
         HString determineUniquePortName(const HString &rPortname);

@@ -97,13 +97,13 @@ private:
 };
 
 
-HOPSANCORE_DLLAPI void simMaster(ComponentSystem *pSystem, std::vector<Component *> &sVector, std::vector<Component *> &cVector,
-                                 std::vector<Component *> &qVector, std::vector<Node *> &nVector, std::vector<double *> &pSimTimes,
+HOPSANCORE_DLLAPI void simMaster(ComponentSystem *pSystem, std::vector<Component *> *sVector, std::vector<Component *> *cVector,
+                                 std::vector<Component *> *qVector, std::vector<Node *> &nVector, std::vector<double *> &pSimTimes,
                                  double startTime, double timeStep, size_t numSimSteps, BarrierLock *pBarrier_S,
                                  BarrierLock *pBarrier_C, BarrierLock *pBarrier_Q, BarrierLock *pBarrier_N);
 
-HOPSANCORE_DLLAPI void simSlave(ComponentSystem *pSystem, std::vector<Component*> &sVector, std::vector<Component*> &cVector,
-                                std::vector<Component*> &qVector, std::vector<Node*> &nVector, double startTime,
+HOPSANCORE_DLLAPI void simSlave(ComponentSystem *pSystem, std::vector<Component*> *sVector, std::vector<Component*> *cVector,
+                                std::vector<Component*> *qVector, std::vector<Node*> &nVector, double startTime,
                                 double timeStep, size_t numSimSteps, BarrierLock *pBarrier_S,
                                 BarrierLock *pBarrier_C, BarrierLock *pBarrier_Q, BarrierLock *pBarrier_N);
 
