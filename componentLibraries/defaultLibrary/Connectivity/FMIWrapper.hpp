@@ -783,7 +783,7 @@ public:
                 }
                 else if(causality == fmi3CausalityLocal && (type == fmi3DataTypeInt64)) {
                     addDebugMessage("64-bit integer local: "+HString(name));
-                    auto it = mInt16Outputs.insert(std::pair<fmi3ValueReference, double*>(vr, new double(0.0)));
+                    auto it = mInt64Outputs.insert(std::pair<fmi3ValueReference, double*>(vr, new double(0.0)));
                     mPorts.push_back(addOutputVariable(toValidHopsanVarName(name), description, "", &it->second));
                 }
                 else if(causality == fmi3CausalityLocal && (type == fmi3DataTypeInt32)) {
@@ -1199,7 +1199,7 @@ public:
             }
             
             fmi2Status status;
-            
+
             //Forward inputs
             std::map<fmi2ValueReference,double*>::iterator it;
             for(it = mRealInputs.begin(); it != mRealInputs.end(); it++) {
