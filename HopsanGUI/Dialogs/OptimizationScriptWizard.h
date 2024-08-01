@@ -100,6 +100,7 @@ private:
     void generateDifferentialEvolutionScript();
     void generateGeneticScript();
     void generateParameterSweepScript();
+    void generateSimulatedAnnealingScript();
 
     void generateObjectiveFunctionCode(QString &templateCode);
     void generateParameterCode(QString &templateCode);
@@ -150,6 +151,12 @@ private:
     QLineEdit *mpMPLineEdit;
     QLabel *mpElitesLabel;
     QLineEdit *mpElitesLineEdit;
+    QLabel *mpCoolingFactorLabel;
+    QLineEdit *mpCoolingFactorLineEdit;
+    QLabel *mpInitialTemperatureLabel;
+    QLineEdit *mpInitialTemperatureLineEdit;
+    QLabel *mpPerturbationStepLabel;
+    QLineEdit *mpPerturbationStepLineEdit;
     QLabel *mpNumModelsLabel;
     QLineEdit *mpNumModelsLineEdit;
     QLabel *mpMethodLabel;

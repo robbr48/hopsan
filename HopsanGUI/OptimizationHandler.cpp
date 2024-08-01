@@ -45,6 +45,7 @@
 #include "OpsWorkerControlledRandomSearch.h"
 #include "OpsWorkerComplexBurmen.h"
 #include "OpsWorkerGenetic.h"
+#include "OpsWorkerSimulatedAnnealing.h"
 #include "MessageHandler.h"
 #include "ModelHandler.h"
 #include "Widgets/ModelWidget.h"
@@ -428,6 +429,14 @@ void OptimizationHandler::setOptVar(const QString &var, const QString &value, bo
             }
             mpWorker = new Ops::WorkerGenetic(mpEvaluator, mpOpsMessageHandler);
         }
+        else if(value == "simulatedannealing" || value == "sa")
+        {
+            if(mpWorker)
+            {
+                delete mpWorker;
+            }
+            mpWorker = new Ops::WorkerSimulatedAnnealing(mpEvaluator, mpOpsMessageHandler);
+        }
         return;
     }
     else if(var == "evalid")
@@ -641,6 +650,22 @@ void OptimizationHandler::setOptVar(const QString &var, const QString &value, bo
         else if(var == "elites")
         {
             pWorker->setNumberOfElites(value.toInt());
+        }
+    }
+    else if(mpWorker->getAlgorithm() == Ops::SimulatedAnnealing)
+    {
+        Ops::WorkerSimulatedAnnealing *pWorker = dynamic_cast<Ops::WorkerSimulatedAnnealing*>(mpWorker);
+        if(var == "alpha")
+        {
+            pWorker->setCoolingFactor(value.toDouble());
+        }
+        else if(var == "t0")
+        {
+            pWorker->setInitialTemperature(value.toDouble());
+        }
+        else if(var == "dx")
+        {
+            pWorker->setPerturbationStep(value.toDouble());
         }
     }
 }

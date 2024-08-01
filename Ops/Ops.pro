@@ -56,6 +56,7 @@ SOURCES += \
     src/OpsWorkerControlledRandomSearch.cpp \
     src/OpsWorkerComplexBurmen.cpp \
     src/OpsWorkerGenetic.cpp \
+    src/OpsWorkerSimulatedAnnealing.cpp \
     src/ludcmp.cpp \
     src/matrix.cpp
 
@@ -74,6 +75,7 @@ HEADERS += \
     include/OpsWorkerGenetic.h \
     include/OpsMessageHandler.h \
     include/OpsWin32DLL.h \
+    include/OpsWorkerSimulatedAnnealing.h \
     include/ludcmp.h \
     include/matrix.h
 

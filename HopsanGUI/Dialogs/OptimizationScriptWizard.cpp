@@ -173,6 +173,18 @@ OptimizationScriptWizard::OptimizationScriptWizard(SystemObject* pSystem, QWidge
     mpElitesLineEdit = new QLineEdit("4", this);
     mpElitesLineEdit->setValidator(new QIntValidator());
 
+    mpInitialTemperatureLabel = new QLabel("Initial temperature: ");
+    mpInitialTemperatureLineEdit = new QLineEdit("1", this);
+    mpInitialTemperatureLineEdit->setValidator(new QDoubleValidator());
+
+    mpCoolingFactorLabel = new QLabel("Cooling factor: ");
+    mpCoolingFactorLineEdit = new QLineEdit("0.1", this);
+    mpCoolingFactorLineEdit->setValidator(new QDoubleValidator());
+
+    mpPerturbationStepLabel = new QLabel("Crossover probability: ");
+    mpPerturbationStepLineEdit = new QLineEdit("0.1", this);
+    mpPerturbationStepLineEdit->setValidator(new QDoubleValidator());
+
     mpNumModelsLabel = new QLabel("Number of models: ");
     mpNumModelsLineEdit = new QLineEdit(QString::number(qMax(1,gpConfig->getIntegerSetting(cfg::numberofthreads))), this);
     mpNumModelsLineEdit->setValidator(new QIntValidator());
@@ -250,8 +262,14 @@ OptimizationScriptWizard::OptimizationScriptWizard(SystemObject* pSystem, QWidge
     pSettingsLayout->addWidget(mpCPLineEdit,           row++, 1);
     pSettingsLayout->addWidget(mpMPLabel,              row,   0);
     pSettingsLayout->addWidget(mpMPLineEdit,           row++, 1);
-    pSettingsLayout->addWidget(mpElitesLabel,              row,   0);
-    pSettingsLayout->addWidget(mpElitesLineEdit,           row++, 1);
+    pSettingsLayout->addWidget(mpElitesLabel,                   row,   0);
+    pSettingsLayout->addWidget(mpElitesLineEdit,                row++, 1);
+    pSettingsLayout->addWidget(mpInitialTemperatureLabel,       row,   0);
+    pSettingsLayout->addWidget(mpInitialTemperatureLineEdit,    row++, 1);
+    pSettingsLayout->addWidget(mpCoolingFactorLabel,            row,   0);
+    pSettingsLayout->addWidget(mpCoolingFactorLineEdit,         row++, 1);
+    pSettingsLayout->addWidget(mpPerturbationStepLabel,         row,   0);
+    pSettingsLayout->addWidget(mpPerturbationStepLineEdit,      row++, 1);
     pSettingsLayout->addWidget(mpNumModelsLabel,       row,   0);
     pSettingsLayout->addWidget(mpNumModelsLineEdit,    row++, 1);
     pSettingsLayout->addWidget(mpMethodLabel,          row,   0);
@@ -635,6 +653,12 @@ void OptimizationScriptWizard::setAlgorithm(int i)
     mpCPLineEdit->setVisible(false);
     mpElitesLabel->setVisible(false);
     mpElitesLineEdit->setVisible(false);
+    mpInitialTemperatureLabel->setVisible(false);
+    mpInitialTemperatureLineEdit->setVisible(false);
+    mpCoolingFactorLabel->setVisible(false);
+    mpCoolingFactorLineEdit->setVisible(false);
+    mpPerturbationStepLabel->setVisible(false);
+    mpPerturbationStepLineEdit->setVisible(false);
     mpMPLabel->setVisible(false);
     mpMPLineEdit->setVisible(false);
     mpLengthLabel->setVisible(false);
@@ -714,6 +738,14 @@ void OptimizationScriptWizard::setAlgorithm(int i)
         mpMPLineEdit->setVisible(true);
         mpElitesLabel->setVisible(true);
         mpElitesLineEdit->setVisible(true);
+    case Ops::SimulatedAnnealing:
+        mpCoolingFactorLabel->setVisible(true);
+        mpCoolingFactorLineEdit->setVisible(true);
+        mpInitialTemperatureLabel->setVisible(true);
+        mpInitialTemperatureLineEdit->setVisible(true);
+        mpPerturbationStepLabel->setVisible(true);
+        mpPerturbationStepLineEdit->setVisible(true);
+        break;
     case Ops::ParameterSweep:
         break;
     default:
@@ -1050,6 +1082,9 @@ bool OptimizationScriptWizard::generateScript()
     case Ops::ParameterSweep :
         generateParameterSweepScript();
         break;
+    case Ops::SimulatedAnnealing :
+        generateSimulatedAnnealingScript();
+        break;
     default:
         algorithmOk=false;
     }
@@ -1188,6 +1223,29 @@ void OptimizationScriptWizard::generateGeneticScript()
 
     mScript = templateCode;
 }
+
+
+//! @brief Generates script for genetic algorithm
+void OptimizationScriptWizard::generateSimulatedAnnealingScript()
+{
+    QFile templateFile(gpDesktopHandler->getExecPath()+"../Scripts/HCOM/optTemplateSimulatedAnnealing.hcom");
+    templateFile.open(QFile::ReadOnly | QFile::Text);
+    QString templateCode = templateFile.readAll();
+    templateFile.close();
+
+    generateObjectiveFunctionCode(templateCode);
+    generateParameterCode(templateCode);
+    generateCommonOptions(templateCode);
+
+    templateCode.replace("<<<t0>>>", mpInitialTemperatureLineEdit->text());
+    templateCode.replace("<<<alpha>>>", mpCoolingFactorLineEdit->text());
+    templateCode.replace("<<<dx>>>", mpPerturbationStepLineEdit->text());
+    templateCode.replace("<<<partol>>>", mpEpsilonXLineEdit->text());
+    templateCode.replace("<<<nmodels>>>", mpNumModelsLineEdit->text());
+
+    mScript = templateCode;
+}
+
 
 
 //! @brief Generates script for parameter sweep
