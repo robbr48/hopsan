@@ -168,7 +168,9 @@ void WorkerSimulatedAnnealing::generateNeighbors()
 {
     for(size_t i=0; i<mNumPoints; ++i) {
         for(size_t j=0; j<mNumParameters; ++j) {
-            mCandidatePoints[i][j] = mPoints[i][j] + mDx*(mParameterMax[j]-mParameterMin[j])*(1-2*opsRand());
+
+
+            mCandidatePoints[i][j] = mPoints[i][j] + mDx*(mParameterMax[j]-mParameterMin[j])*(1-2*opsNormalDistribution(0.5*getMaxPercentalParameterDiff()));
             if(mCandidatePoints[i][j] <= mParameterMin[j]) {
                 mCandidatePoints[i][j] = mParameterMin[j];
             }

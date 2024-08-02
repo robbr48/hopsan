@@ -385,6 +385,17 @@ double Worker::opsRand()
     return distribution(generator);
 }
 
+//! @brief Normal distribution between 0 and 1
+double Worker::opsNormalDistribution(double stddev)
+{
+    double U1 = 0;
+    while(U1 == 0) {
+        U1 = opsRand();
+    }
+    double U2 = opsRand();
+    return std::fmax(0, std::fmin(1, 0.5 + stddev*sqrt(-2*log(U1))*cos(2*M_PI*U2)));
+}
+
 bool Worker::aborted()
 {
     return mpMessageHandler->aborted();

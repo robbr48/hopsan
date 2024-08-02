@@ -125,6 +125,7 @@ public:
     size_t getCurrentNumberOfIterations();
 
     double opsRand();
+    double opsNormalDistribution(double stddev);
 
     bool aborted();
 
