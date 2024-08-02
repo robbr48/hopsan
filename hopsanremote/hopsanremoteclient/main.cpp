@@ -34,11 +34,12 @@
 #include <sstream>
 #include <thread>
 #include <signal.h>
-using namespace std;
 
 static int s_interrupted = 0;
 #ifdef _WIN32
 #include <windows.h>
+
+using namespace std;
 
 BOOL WINAPI consoleCtrlHandler( DWORD dwCtrlType )
 {

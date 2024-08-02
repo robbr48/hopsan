@@ -52,8 +52,6 @@
 #include "CoreUtilities/ConnectionAssistant.h"
 #include "ComponentUtilities/num2string.hpp"
 
-using namespace std;
-
 #if (__cplusplus >= 201103L)
 #ifdef _WIN32
 #include <windows.h>
@@ -63,6 +61,8 @@ using namespace std;
 #include <functional>
 #include <chrono>
 #include <ctime>
+
+using namespace std;
 
 #ifdef _WIN32
 const long long g_Frequency = []() -> long long

@@ -20,6 +20,7 @@ CONFIG(release, debug|release) {
 
 # Enable C++14
 CONFIG += c++20
+DEFINES -= _HAS_STD_BYTE
 
 #Determine if default component lib should be build in
 #DEFINES *= HOPSAN_INTERNALDEFAULTCOMPONENTS

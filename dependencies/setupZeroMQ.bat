@@ -37,7 +37,7 @@ if "%HOPSAN_BUILD_COMPILER%" == "msvc" (
     ctest -C Release --parallel 8
   )
 ) else (
-  cmake -Wno-dev -DWITH_LIBSODIUM=OFF -G %HOPSAN_BUILD_CMAKE_GENERATOR% -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%installdir% %codedir%
+  cmake -Wno-dev -DWITH_LIBSODIUM=OFF -DZMQ_HAVE_IPC=0 -G %HOPSAN_BUILD_CMAKE_GENERATOR% -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%installdir% %codedir%
   cmake --build . --parallel 8
   cmake --build . --target install
   if not "%HOPSAN_BUILD_DEPENDENCIES_TEST%" == "false" (

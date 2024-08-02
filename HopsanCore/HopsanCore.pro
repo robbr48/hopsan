@@ -107,6 +107,9 @@ win32 {
         message(Core hash: $${commithash})
         system($${PWD}/../writeGitVersionHeader.bat $${PWD}/include/HopsanCoreGitVersion.h HOPSANCORE $${commithash} $${commitdatetime})
     }
+
+    LIBS += -L$${PWD}/../bin -ltbb
+    INCLUDEPATH += $${PWD}/../dependencies/tbb-code/include
 }
 unix {
     LIBS += -ldl -ltbb
