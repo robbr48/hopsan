@@ -100,7 +100,7 @@ OptimizationScriptWizard::OptimizationScriptWizard(SystemObject* pSystem, QWidge
 
     QLabel *pAlgorithmLabel = new QLabel("Optimiation algorithm:");
     mpAlgorithmBox = new QComboBox(this);
-    mpAlgorithmBox->addItems(QStringList() << "Simplex (Nelder-Mead)" << "Complex-RF" << "Complex-RFP" << "Particle Swarm" << "Differential Evolution"<< "Genetic Algorithm" << "Parameter Sweep");
+    mpAlgorithmBox->addItems(QStringList() << "Simplex (Nelder-Mead)" << "Complex-RF" << "Complex-RFP" << "Particle Swarm" << "Differential Evolution"<< "Genetic Algorithm" << "Simulated Annealing" << "Parameter Sweep");
     connect(mpAlgorithmBox, SIGNAL(currentIndexChanged(int)), this, SLOT(setAlgorithm(int)));
 
     QLabel *pIterationsLabel = new QLabel("Number of iterations:");
@@ -181,7 +181,7 @@ OptimizationScriptWizard::OptimizationScriptWizard(SystemObject* pSystem, QWidge
     mpCoolingFactorLineEdit = new QLineEdit("0.1", this);
     mpCoolingFactorLineEdit->setValidator(new QDoubleValidator());
 
-    mpPerturbationStepLabel = new QLabel("Crossover probability: ");
+    mpPerturbationStepLabel = new QLabel("Maximum perturbation step: ");
     mpPerturbationStepLineEdit = new QLineEdit("0.1", this);
     mpPerturbationStepLineEdit->setValidator(new QDoubleValidator());
 
