@@ -299,7 +299,7 @@ private:
         setDataCharacteristics(Density, "Density", "rho", "kg/m^3", IntensityType);
         setDataCharacteristics(DensityWaveVariable, "DensityWaveVariable", "crho", "kg/m^3", TLMType);
         setDataCharacteristics(DensityCharImpedance, "DensityCharImpedance", "Zcrho", "s/m^3", TLMType);
-        setDataCharacteristics(Temperature, "Temperature", "T", "K", DefaultType);
+        setDataCharacteristics(Temperature, "Temperature", "T", "K", TLMType);
 
         // Set default initial startvales to reasonable (non-zero) values
         mDataValues[Pressure] = 100000;
