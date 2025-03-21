@@ -41,6 +41,13 @@ DcpServer::DcpServer(ComponentSystem *pSystem, const std::string host, int port,
         else if(component->getTypeName() == "SignalOutputInterface") {
             mOutputs.push_back(component->getName().c_str());
         }
+        else if(component->getTypeName() == "MechanicInterfaceC") {
+            mInputs.push_back(HString(component->getName()+".c").c_str());
+            mInputs.push_back(HString(component->getName()+".Zc").c_str());
+            mOutputs.push_back(HString(component->getName()+".F").c_str());
+            mOutputs.push_back(HString(component->getName()+".x").c_str());
+            mOutputs.push_back(HString(component->getName()+".v").c_str());
+        }
     }
     std::cout << "Inputs:";
     for(const auto &input : mInputs) {
@@ -162,7 +169,20 @@ void DcpServer::configure() {
     }
     for(size_t i=0; i<mInputs.size(); ++i) {
         mInputDataPtrs.push_back(mManager->getInput<float64_t *>(mOutputs.size()+i));
-        mInputNodePtrs.push_back(mpRootSystem->getSubComponent(mInputs[i].c_str())->getPort("out")->getNodeDataPtr(0));
+        HString compName = mInputs[i].substr(0,mInputs[i].find('.')).c_str();
+        HString dataName = mInputs[i].substr(mInputs[i].find('.')+1).c_str();
+        HString portName = "out";
+        int dataId = 0;
+        if(mpRootSystem->getSubComponent(compName)->getTypeName() == "MechanicInterfaceC") {
+            portName = "P1";
+            if(dataName == "c") {
+                dataId = 3;
+            }
+            else if(dataName == "Zc") {
+                dataId = 4;
+            }
+        }
+        mInputNodePtrs.push_back(mpRootSystem->getSubComponent(compName)->getPort(portName)->getNodeDataPtr(dataId));
     }
 
     std::cout << "Initializing... ";
