@@ -1137,15 +1137,15 @@ bool VariableTableWidget::setStartValues()
             continue;
         }
 
-        ParameterValueSelectionWidget *pValueWideget = qobject_cast<ParameterValueSelectionWidget*>(cellWidget(row, int(VariableTableWidget::Value)));
+        ParameterValueSelectionWidget *pValueWidget = qobject_cast<ParameterValueSelectionWidget*>(cellWidget(row, int(VariableTableWidget::Value)));
         // Extract name and value from row
-        QString name = pValueWideget->getName();
-        QString value = pValueWideget->getValueText();
+        QString name = pValueWidget->getName();
+        QString value = pValueWidget->getValueText();
 
         // Check if we have new custom scaling
         UnitConverter newCustomUnitScale, previousUnitScale;
         mpModelObject->getCustomParameterUnitScale(name, previousUnitScale);
-        UnitSelectionWidget *pUnitWidget = pValueWideget->getUnitSelectionWidget();
+        UnitSelectionWidget *pUnitWidget = pValueWidget->getUnitSelectionWidget();
         if (pUnitWidget)
         {
             // Check if this is a numeric value
@@ -1888,30 +1888,31 @@ void ParameterValueSelectionWidget::createSysParameterSelectionMenu()
 
 void ParameterValueSelectionWidget::openValueEditDialog()
 {
-    auto pTexteditorDialog = new QDialog(gpMainWindowWidget);
-    pTexteditorDialog->setWindowTitle(QString("Edit %1").arg(mVariablePortDataName));
-    auto pLayout = new QGridLayout(pTexteditorDialog);
-    auto pTexteditor = new QTextEdit(pTexteditorDialog);
-    pTexteditor->setWordWrapMode(QTextOption::NoWrap);
-    pTexteditor->setPlainText(mpValueEdit->text());
-    auto pButtonBox = new QDialogButtonBox(pTexteditorDialog);
+    auto pTextEditorDialog = new QDialog(gpMainWindowWidget);
+    pTextEditorDialog->setWindowTitle(QString("Edit %1").arg(mVariablePortDataName));
+    pTextEditorDialog->resize(480,640);
+    auto pLayout = new QGridLayout(pTextEditorDialog);
+    auto pTextEditor = new QTextEdit(pTextEditorDialog);
+    pTextEditor->setWordWrapMode(QTextOption::NoWrap);
+    pTextEditor->setPlainText(mpValueEdit->text());
+    PythonHighlighter *highlighter = new PythonHighlighter(pTextEditor->document());
+    QFont monoFont = pTextEditor->font();
+    monoFont.setFamily("Courier");
+    monoFont.setPointSize(11);
+    pTextEditor->setFont(monoFont);
+    auto pButtonBox = new QDialogButtonBox(pTextEditorDialog);
     pButtonBox->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-    connect(pButtonBox, SIGNAL(accepted()), pTexteditorDialog, SLOT(accept()));
-    connect(pButtonBox, SIGNAL(rejected()), pTexteditorDialog, SLOT(reject()));
+    connect(pButtonBox, SIGNAL(accepted()), pTextEditorDialog, SLOT(accept()));
+    connect(pButtonBox, SIGNAL(rejected()), pTextEditorDialog, SLOT(reject()));
 
-    auto *pHelpText = new QLabel(mpModelObject->getHelpText(), pTexteditorDialog);
-    pHelpText->setWordWrap(true);
+    pLayout->addWidget(pTextEditor, 0, 0, 1, 1);
+    pLayout->addWidget(pButtonBox, 1, 0, 1, 1, Qt::AlignRight);
 
-    pLayout->addWidget(pTexteditor, 0, 0, 1, 2);
-    pLayout->addWidget(pHelpText, 0, 2, 1, 1, Qt::AlignRight);
-    pLayout->addWidget(pButtonBox, 1, 0, 1, 3, Qt::AlignRight);
+    pTextEditor->setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
 
-    pTexteditor->setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
-    pHelpText->setSizePolicy(QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred));
-
-    auto rc = pTexteditorDialog->exec();
+    auto rc = pTextEditorDialog->exec();
     if (rc == QDialog::Accepted) {
-        QString text = pTexteditor->toPlainText();
+        QString text = pTextEditor->toPlainText();
         // Increase max length if needed
         if (mpValueEdit->maxLength() < text.size()) {
             mpValueEdit->setMaxLength(text.size());

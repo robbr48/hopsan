@@ -714,6 +714,10 @@ QTextLineStream& operator <<(QTextLineStream &rLineStream, const char* input)
 //! @todo this should be handled by CORE
 bool verifyParameterValue(QString &rValue, const QString type, const QStringList &rSelfParameterNames, const QStringList &rSysParNames, QString &rErrorString)
 {
+    if(type == "textblock") {
+        return true;    //Everything is ok for a text block
+    }
+
     //Strip trailing and leading spaces
     stripLTSpaces(rValue);
 
