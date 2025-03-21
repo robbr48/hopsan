@@ -627,10 +627,12 @@ void simWholeSystems(std::vector<ComponentSystem *> systemPtrs, double stopTime)
 //! @brief Function for simulating whole systems multi-threaded
 //! @param systemPtrs Vector with pointers to the systems to simulate
 //! @param stopTime Stop time of simulation
-void simWholeSystemInRealtime(double realTimeFactor, volatile bool *pStopSimulation, double *pTime, double timeStep, std::vector<Component*> signalComponentPtrs, std::vector<Component*> cComponentPtrs, std::vector<Component*> qComponentPtrs)
+void simWholeSystemInRealtime(double realTimeFactor, volatile bool *pStopSimulation, double *pTime, double timeStep, ComponentSystem *pSystem, std::vector<Component*> signalComponentPtrs, std::vector<Component*> cComponentPtrs, std::vector<Component*> qComponentPtrs)
 {
 #if (__cplusplus >= 201103L)
     auto wallTime = std::chrono::steady_clock::now();
+
+    pSystem->initialize(0, 10);
 
     while(!(*pStopSimulation)) {
         *pTime += timeStep; //mTime is updated here before the simulation,
@@ -654,6 +656,8 @@ void simWholeSystemInRealtime(double realTimeFactor, volatile bool *pStopSimulat
         wallTime += std::chrono::microseconds(int(1000000*timeStep/realTimeFactor));
         std::this_thread::sleep_until(wallTime);
     }
+
+    pSystem->finalize();
 #else
     return;
 #endif

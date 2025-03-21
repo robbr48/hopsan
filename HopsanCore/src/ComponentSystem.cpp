@@ -3384,7 +3384,7 @@ void ComponentSystem::simulate(const double stopT)
 bool ComponentSystem::startRealtimeSimulation(double realTimeFactor)
 {
 #if defined(HOPSANCORE_USEMULTITHREADING)
-    std::thread rtThread(simWholeSystemInRealtime, realTimeFactor, &mStopSimulation, &mTime, mTimestep, mComponentSignalptrs, mComponentCptrs, mComponentQptrs);
+    std::thread rtThread(simWholeSystemInRealtime, realTimeFactor, &mStopSimulation, &mTime, mTimestep, this, mComponentSignalptrs, mComponentCptrs, mComponentQptrs);
     rtThread.detach();
     return true;
 #else

@@ -451,11 +451,6 @@ void AnimationWidget::playRT()
         gpMessageHandler->addErrorMessage("Could not start real-time animation, model is not OK");
         return;
     }
-    if(!mpContainer->getCoreSystemAccessPtr()->initialize(0,10,0))
-    {
-        gpMessageHandler->addErrorMessage("Could not start real-time animation, model failed to initialize");
-        return;
-    }
 
     if(!mpContainer->mpModelWidget->startRealtimeSimulation(mpSpeedSpinBox->value())) {
         gpMessageHandler->addErrorMessage("Could not start real-time animation.");

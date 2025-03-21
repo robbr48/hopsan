@@ -725,7 +725,6 @@ void ModelWidget::stopRealtimeSimulation()
 {
     CoreSimulationHandler mCoreSimulationHandler;
     mCoreSimulationHandler.stopRealtimeSimulation(mpToplevelSystem->getCoreSystemAccessPtr());
-    mCoreSimulationHandler.finalize(mpToplevelSystem->getCoreSystemAccessPtr());
     mSimulateMutex.unlock();
 }
 
