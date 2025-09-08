@@ -10,14 +10,18 @@ classdef hopsan
             end
         end
         function obj = hopsan()
+            home = getenv('HOPSANHOME');       % returns string or char (depending on input type)
+            home = char(home);                 % normalize
+            home = strrep(home, '"', '');      % remove any double quotes
+            home = regexprep(home, '[\\/]+$', ''); % drop trailing slashes, just in case
             if ispc
-                path = fullfile(getenv("HOPSANHOME"), '\bin\hopsanc.dll');
-                complibpath = fullfile(getenv("HOPSANHOME"), '\componentLibraries\defaultLibrary\defaultcomponentlibrary.dll');
+                path = fullfile(home, '\bin\hopsanc.dll');
+                complibpath = fullfile(home, '\componentLibraries\defaultLibrary\defaultcomponentlibrary.dll');
             elseif isunix
-                path = fullfile(getenv("HOPSANHOME"), '\bin\libhopsanc.so');
-                complibpath = fullfile(getenv("HOPSANHOME"), '\componentLibraries\defaultLibrary\libdefaultcomponentlibrary.so');
+                path = fullfile(home, '\bin\libhopsanc.so');
+                complibpath = fullfile(home, '\componentLibraries\defaultLibrary\libdefaultcomponentlibrary.so');
             end
-            hpath = fullfile(getenv("HOPSANHOME"), '\hopsanc\include\hopsanc.h');
+            hpath = fullfile(home, 'hopsanc', 'include', 'hopsanc.h');
             loadlibrary(path,hpath);
             if isfile(complibpath)
                 calllib('hopsanc','loadLibrary',complibpath);

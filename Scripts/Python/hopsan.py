@@ -3,6 +3,7 @@ class hopsan:
         import ctypes
         import os
         if os.name == "posix":
+            print(os.getenv('HOPSANHOME'))
             self.hdll = ctypes.cdll.LoadLibrary(os.getenv('HOPSANHOME')+"/bin/libhopsanc.so")
             libpath= os.getenv('HOPSANHOME')+"componentLibraries/defaultLibrary/libdefaultcomponentlibrary.so"
         elif os.name == "nt":
